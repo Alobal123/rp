@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import krabec.citysimulator.Node.NodeComparator;
+
 public class Crossroad {
 	
 	int number_of_roads;
@@ -11,8 +13,7 @@ public class Crossroad {
 	 * This list stores all crossroads which can be made from this crossroad by adding one road.
 	 */
 	List<Crossroad> viable_crossroads;
-	List<Integer> rotation_list = new ArrayList<>();
-	List<Integer> rotation2_list = new ArrayList<>();
+	
 	
 	/**
 	 * This list stores angles in degrees between the roads in the crossroad clockwise.
@@ -63,6 +64,7 @@ public class Crossroad {
 		
 		double sum = 0;
 		Crossroad c = viable_crossroads.get(a);
+		System.out.println("");
 		System.out.println("rostu z " + this);
 		System.out.println("rostu v " +  c);
 		
@@ -73,7 +75,7 @@ public class Crossroad {
 				break;
 			}
 		}
-		System.out.println("Sum " +sum);
+		//System.out.println("Sum " +sum);
 		return (360 + sum) % 360;
 	}
 	
@@ -94,7 +96,7 @@ public class Crossroad {
 			if (c.number_of_roads == this.number_of_roads) {
 					int same_angles = 0;
 					for (int j = 0; j < c.number_of_roads; j++) {
-						if(Math.abs( c.angles.get((j) % c.number_of_roads) - this.angles.get(j)) < 0.0000001){ //TODO nastavit spravnou konstantu
+						if(Math.abs( c.angles.get((j) % c.number_of_roads) - this.angles.get(j)) < 0.00000000001){ //TODO nastavit spravnou konstantu
 							same_angles++;
 						}
 					}
@@ -135,6 +137,22 @@ public class Crossroad {
 	public Crossroad copy(){
 		Crossroad c = new Crossroad(this.number_of_roads,new ArrayList<Double>(this.angles));
 		return c;
+	}
+	public static Crossroad find(List<Crossroad> all_crossroads, Node node){
+		node.sort();
+		ArrayList<Double> angles = new ArrayList<>();
+		Crossroad newcrossroad = new Crossroad(node.streets.size(), angles);
+		for (int i = 0; i < node.streets.size()-1; i++) {
+			angles.add((node.streets.get(i+1).get_absolute_angle(node) - node.streets.get(i).get_absolute_angle(node)));
+		}
+		angles.add((360 - node.streets.get(node.streets.size()-1).get_absolute_angle(node) + node.streets.get(0).get_absolute_angle(node)));
+		
+		for (Crossroad c: all_crossroads) {
+			if(c.equals(newcrossroad))
+				return c;
+		}
+		
+		return null;
 	}
 	
 }

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+
+import javax.security.sasl.SaslException;
 // TODO: Auto-generated Javadoc
 
 /**
@@ -20,6 +22,9 @@ public class Street_Network {
 		//TODO nejak spocitat tady tu specialni krizovatku
 	}
 	
+	
+	List<Crossroad> all_crossroads;
+	List<Quarter> quarters = new ArrayList<>();
 	/** The nodes. */
 	List<Node> nodes;
 	static Random rnd = new Random();
@@ -31,9 +36,9 @@ public class Street_Network {
 	/** List of nodes which are capable of further growth. */
 	List<Node> to_grow_nodes;
 	
-	/** The focus_constant. */
-	double focus_constant;
-	double average_main_street_length;
+	Node current_new_node;
+	Street current_new_street;
+	
 	
 	/**
 	 * Instantiates a new street_ network.
@@ -44,7 +49,7 @@ public class Street_Network {
 		nodes = new ArrayList<>();
 		growthcenters = new ArrayList<>();
 		to_grow_nodes = new ArrayList<>();
-		this.focus_constant = focus_constant;
+		Settings.focus_constant = focus_constant;
 	}
 	
 	/**
@@ -52,14 +57,26 @@ public class Street_Network {
 	 * new quarter came to be. If so, it is filled with minor streets.
 	 */
 	void grow_major_streets(){
-		ArrayList<Node> chosen_nodes = choose_nodes_to_grow();
+		ArrayList<Node> chosen_nodes = choose_nodes_to_grow(to_grow_nodes);
 		
 		for (Node node : chosen_nodes) {
-			Street newstreet = grow_major_street(node);
+			Street newstreet = grow_street(node,true,null,to_grow_nodes);
+			System.out.println("Clockwise:");
 			ArrayList<Street> new_quarter = check_for_new_quarters(newstreet,true);
-			grow_minor_streets(new_quarter);
-			new_quarter = check_for_new_quarters(newstreet,false);
-			grow_minor_streets(new_quarter);
+			System.out.println("Counterclockwise:");
+			ArrayList<Street> new_quarter2 = check_for_new_quarters(newstreet,false);
+			if(new_quarter != null && new_quarter2 != null){
+				if(new_quarter.size() < new_quarter2.size()){
+					Quarter q = new Quarter(new_quarter);
+					quarters.add(q);
+					grow_minor_streets(q);
+				}
+				else{
+					Quarter q = new Quarter(new_quarter2);
+					quarters.add(q);
+					grow_minor_streets(q);
+				}
+			}
 		}
 	}
 	
@@ -68,7 +85,7 @@ public class Street_Network {
 	 *
 	 * @return List of chosen nodes.
 	 */
-	private ArrayList<Node> choose_nodes_to_grow(){  	 //TODO zohlednovat pomer poctu uzlu s valenci 2 a 4?
+	private ArrayList<Node> choose_nodes_to_grow(List<Node> to_grow_nodes){  	 //TODO zohlednovat pomer poctu uzlu s valenci 2 a 4?
 		
 		ArrayList<Node> chosen = new ArrayList<>();
 		assert to_grow_nodes.size()>0:"There are no nodes to grow";
@@ -76,7 +93,7 @@ public class Street_Network {
 	    
 	    double distSum = 0;
 		for (int i = 0; i < to_grow_nodes.size(); i++) {
-			distribution[i] = Math.pow(Math.E,-1*focus_constant*Point.get_smallest_distance(to_grow_nodes.get(i).point, growthcenters));
+			distribution[i] = Math.pow(Math.E,-1*Settings.focus_constant*Point.get_smallest_distance(to_grow_nodes.get(i).point, growthcenters));
 			distSum +=distribution[i];
 		}
 		for (int j = 0; j < 1; j++) {					 //TODO vypocitat pocet generovanych ulic
@@ -100,113 +117,132 @@ public class Street_Network {
 	 * @param node Node from which street is growing.
 	 * @return the street
 	 */
-	 Street grow_major_street(Node node){
-		Street s = null;
-		boolean succes = false;
-		int limit = 10;							//TODO nastav limit kolikrat se bude zkouset stavet cesta z uzlu nez se vyradi
-		for (int i = 0; i < limit; i++) {
-			//System.out.println(node.crossroad);
-			int a = rnd.nextInt(node.crossroad.viable_crossroads.size());
-			Crossroad new_crossroad = node.crossroad.viable_crossroads.get(a);
+	 Street grow_street(Node oldnode,Boolean major, Quarter quarter, List<Node> to_grow_nodes){
+		 if(oldnode.crossroad.viable_crossroads.size() == 0){
+				to_grow_nodes.remove(oldnode);
+				return null;
+		}
+		
+		boolean succes = true;
+		int limit = 20;							//TODO nastav limit kolikrat se bude zkouset stavet cesta z uzlu nez se vyradi
+		cyklus: for (int i = 0; i < limit; i++) {
+			succes = true;
+			int a = rnd.nextInt(oldnode.crossroad.viable_crossroads.size());
+			Crossroad new_crossroad = oldnode.crossroad.viable_crossroads.get(a);
+			Crossroad old_crossroad = oldnode.crossroad;
+			double angle = (oldnode.angle + oldnode.crossroad.get_relative_angle(a)+360) % 360;
+			double length;
+			if(major)
+				length= rnd.nextDouble() * (Settings.major_max_length - Settings.major_min_length) + Settings.major_min_length +Settings.major_prolongation;
+			else
+				length = rnd.nextDouble() * (Settings.minor_max_length - Settings.minor_min_length) + Settings.minor_min_length +Settings.minor_prolongation; 
 			
-			double angle = (node.angle + node.crossroad.get_relative_angle(a)+360) % 360;
-			System.out.println("angle" + angle);
+			current_new_node = make_new_node(angle, major, oldnode,length);
+			current_new_node.angle = angle;
+			current_new_street = new Street( oldnode, current_new_node,major);
+			current_new_node.streets.add(current_new_street);
+			current_new_node.angle = current_new_node.compute_angle();
+			oldnode.streets.add(current_new_street);
+			oldnode.crossroad = new_crossroad;
+			oldnode.angle = oldnode.compute_angle();
+			nodes.add(current_new_node);
+			to_grow_nodes.add(current_new_node);
+
+			Street_Result result = Street_Result.not_altered;
 			
-			double max_length = 0.5;			//TODO nastav maximalni dleku ulice
-			//double length = rnd.nextDouble() * max_length;
-			double length = 0.5;
-			double dx = Math.sin(angle * Math.PI / 180) * length;
-			double dy = Math.cos(angle * Math.PI / 180) * length;
-			
-			Node newnode = new Node(node.point.x + dx, node.point.y + dy, true);
-			
-			newnode.angle = angle;
-			
-			s = new Street(node, newnode,true);
-			
-			newnode = check_for_close_node(s, newnode);
-			s = new Street(node, newnode,true);
-			
-			if(true){
-				succes = true;
-				newnode.streets.add(s);
-				
-				if(!nodes.contains(newnode))
-					nodes.add(newnode);
-				
-				newnode.angle = newnode.compute_angle();
-				node.angle = node.compute_angle();
-				
-				node.crossroad = new_crossroad;
-				node.streets.add(s);
-				
-				if(!to_grow_nodes.contains(newnode))
-					to_grow_nodes.add(newnode);
-				if(node.crossroad.viable_crossroads.size() == 0){
-					to_grow_nodes.remove(node);
-					
+			if(succes){
+				result = check_for_crosses(current_new_street, current_new_node, oldnode,major,to_grow_nodes);
+				if(result == Street_Result.not_altered){
+					if(major)
+						length -= Settings.major_prolongation;	
+					else
+						length -= Settings.minor_prolongation;
+					double dx = Math.sin(angle * Math.PI / 180) * length;
+					double dy = Math.cos(angle * Math.PI / 180) * length;
+					current_new_node.point = new Point(oldnode.point.x + dx, oldnode.point.y + dy);
 				}
-				if(newnode.crossroad.viable_crossroads.size() == 0){
-					System.out.println("removed a new node");
-					to_grow_nodes.remove(newnode);
-					
+			}
+			else if (result == Street_Result.fail){
+				revert_changes(oldnode, old_crossroad,major,to_grow_nodes);
+				succes = false;
+			}
+			if(succes && !major && result != Street_Result.altered){
+				result = check_if_inside(current_new_node,current_new_street, quarter);
+				if(result == Street_Result.fail){
+					revert_changes(oldnode, old_crossroad,major,to_grow_nodes);
+					succes = false;
 				}
-				break;
+			}
+			
+			
+			if(succes){
+				result = check_for_close_node(current_new_street, current_new_node,oldnode,major,to_grow_nodes);
+				if(result == Street_Result.fail){
+					revert_changes(oldnode, old_crossroad,major,to_grow_nodes);
+					succes = false;
+				}
+			}
+			if(succes){
+				result = check_for_close_streets(current_new_node,current_new_street,major);
+				if(result == Street_Result.fail){
+					revert_changes(oldnode, old_crossroad,major,to_grow_nodes);
+					succes = false;
+				}
+			}
+			
+		if(succes){
+			break cyklus;
 			}
 		}
+		
 		if(!succes){
-			to_grow_nodes.remove(node);
+			to_grow_nodes.remove(oldnode);
+			return null;
 		}
-		return s;
+		return current_new_street;
 	}
 	
-	private Node check_for_close_node(Street s, Node newnode) {
+	 
+	private Street_Result check_for_close_node(Street s, Node newnode, Node oldnode,Boolean major,List<Node> to_grow_nodes) {
+		
+		double constant;
+		if(major)
+			 constant = Settings.major_close_node_constant;
+		else
+			constant = Settings.minor_close_node_constant;
 		for (Node n: nodes) {
-			double close_node_constant = 0.1; //TODO najit spravnou hodnotu pro tuhle konstantu.
-			if(s.node1 != n && s.node2!=n && Point.dist(n.point, newnode.point) < close_node_constant){
-				System.out.println("Jsou blizko");
-				System.out.println(n + " " + n.angle);
-				System.out.println(n.crossroad);
+			
+			if(s.node1 != n && s.node2!=n && Point.dist(n.point, newnode.point) < constant){
+				Street newstreet = new Street(oldnode, n, major);
 				
-				double new_angle1;
-				double new_angle2;
-				double sum = 0;
-				int index = 0;
-				double relative_angle = (360 + 360 - (n.angle - s.get_absolute_angle(newnode))) %360;
+				oldnode.streets.remove(s);
+				oldnode.streets.add(newstreet);
+				n.streets.add(newstreet);
 				
-				if(n.crossroad.number_of_roads == 1){
-					new_angle1 = (360 - relative_angle)%360;
-					new_angle2 = (360 + relative_angle)%360;
-					index = 0;
+				Crossroad oldnode_cross = Crossroad.find(all_crossroads,oldnode);
+				Crossroad n_cross = Crossroad.find(all_crossroads,n);
+				if(oldnode_cross != null && n_cross != null){
+					oldnode.crossroad = oldnode_cross;
+					n.crossroad = n_cross;
+					
+					nodes.remove(newnode);
+					to_grow_nodes.remove(newnode);
+					current_new_node = n;
+					current_new_street = newstreet;
+					
+					//System.out.println("Spojili se! ");
+					return Street_Result.altered;
 				}
 				else{
-				
-					while(sum <= relative_angle){
-						sum+=n.crossroad.angles.get(index);
-						index++;
-					}
-					index--;
-					new_angle1 = sum - relative_angle;
-					new_angle2 = n.crossroad.angles.get(index) - new_angle1;
-					
+					oldnode.streets.add(s);
+					oldnode.streets.remove(newstreet);
+					n.streets.remove(newstreet);
+					//System.out.println("Nespojili se! ");
+					return Street_Result.fail;
 				}
-				
-				ArrayList<Double> new_angles = new ArrayList<>(n.crossroad.angles);
-				new_angles.set(index, new_angle1);
-				new_angles.add(index, new_angle2);
-				Crossroad new_crossroad = new Crossroad(n.crossroad.number_of_roads+1, new_angles);
-				
-				for (Crossroad c: n.crossroad.viable_crossroads) {
-					if(c.equals(new_crossroad)){
-						System.out.println("Spojili se! ");
-						n.crossroad = c;
-						return n;
-					}
-				}
-				
 			}
 		}
-		return newnode;
+		return Street_Result.not_altered;
 		
 	}
 
@@ -219,37 +255,143 @@ public class Street_Network {
 	 * @param clockwise the clockwise
 	 * @return List of streets creating the face.
 	 */
-	static ArrayList<Street> check_for_new_quarters(Street street,Boolean clockwise){
-		Node n = street.node1;
-		Street s = street;
-		ArrayList<Street> rt = new ArrayList<>();
-		HashSet<Street> Visited = new HashSet<>();
-		
-		while(s != null){
-			Street s2 = s.get_least_angled(n, clockwise);
-			rt.add(s);
-			//System.out.println(s);
-			if(s2 == null)
-				return null;
-			if (Visited.size()>1 && (street.node2 == s.node1 || street.node2 == s.node2)){
-				System.out.println("Succes!");
-				return rt;
-			}
-			
-			for (Street visited : Visited) {
-				if(Visited.size()>2 && (visited.node1 == s.node1 || visited.node1== s.node2 
-						|| visited.node2 == s.node1 || visited.node2 == s.node2) ){
-					return null;
+	
+	private Street_Result check_for_crosses(Street newstreet, Node newnode, Node oldnode,Boolean major,List<Node> to_grow_nodes){
+		Street intersecting = null;
+		Point intersection = null;
+		double min = Point.dist(oldnode.point, newnode.point);
+		for (Node n: nodes) {
+			for(Street street: n.streets){
+				if(!street.equals(newstreet)){
+					Point intersect = null;
+					intersect  = Street.getIntersection(street, newstreet);
+					if(intersect != null && Point.dist(oldnode.point, intersect) < min
+							&& Point.dist(intersect, street.node1.point) > 0.00001 && Point.dist(intersect, street.node2.point) > 0.00001){
+						intersecting = street;
+						intersection = intersect;
+						min = Point.dist(oldnode.point, intersect);
+					}
 				}
 			}
-			Visited.add(s);
-			if(n == s2.node2)
-				n = s2.node1;
-			else
-				n = s2.node2;
-			s = s2;
-			
 		}
+		
+		if(intersecting != null){
+			Node trynode = new Node(intersection.x, intersection.y, major);
+			Street newstreet1 = new Street(intersecting.node1, trynode, intersecting.major);
+			Street newstreet2 = new Street(intersecting.node2,trynode,intersecting.major);
+			Street newstreet3 = new Street(oldnode,trynode,major);
+			ArrayList<Double> angles = new ArrayList<>();
+			angles.add(180.0);
+			double angle = Street.get_angle(newstreet1, newstreet3);
+			if(angle>180)
+				angle = angle -180;
+			angles.add(angle);
+			angles.add(180.0 - angle);
+			//System.out.println("Angle  is " + Street.get_angle(newstreet1, newstreet3));
+			Crossroad newcross = new Crossroad(3, angles);
+			for (Crossroad c: all_crossroads) {
+				if(c.equals(newcross)){
+					System.out.println("uchytil se v " + c);
+					trynode.streets.add(newstreet1);
+					trynode.streets.add(newstreet2);
+					trynode.streets.add(newstreet3);
+					intersecting.node1.streets.add(newstreet1);
+					intersecting.node2.streets.add(newstreet2);
+					intersecting.node1.streets.remove(intersecting);
+					intersecting.node2.streets.remove(intersecting);
+					trynode.crossroad = c;
+					oldnode.streets.remove(newstreet);
+					oldnode.streets.add(newstreet3);
+			
+					nodes.add(trynode);
+					to_grow_nodes.add(trynode);
+					nodes.remove(newnode);
+					to_grow_nodes.remove(newnode);
+					trynode.angle = trynode.compute_angle();
+					current_new_node = trynode;
+					current_new_street = newstreet3;
+					return Street_Result.altered;
+				}
+			}
+			return Street_Result.fail;
+		}
+		return Street_Result.not_altered;
+	}
+	
+	private Street_Result check_for_close_streets(Node newnode,Street newstreet, Boolean major){
+		double constant;
+		if(major)
+			 constant = Settings.major_close_street_constant;
+		else
+			constant = Settings.minor_close_street_constant;
+		
+		
+		for (Node n: nodes) {
+			for(Street s: n.streets){
+				if((s.node1 != newnode && s.node2 != newnode && newnode.distance(s) < constant) 
+						|| (newstreet.node1 != n && newstreet.node2 != n && n.distance(newstreet) < constant)){
+					System.out.println("Je blizko");
+					return Street_Result.fail;
+				}
+			}
+		
+		}
+		return Street_Result.not_altered;
+	}
+	
+	private Street_Result check_if_inside(Node newnode,Street newstreet, Quarter quarter){
+		double angle = 0;
+		boolean inside = true;
+		while(angle<360){
+			Street help_street = new Street(newnode, make_new_node(angle, false, newnode, Settings.sufficiently_big), false);
+			int intersections = 0;
+			for (Street s: quarter.main_streets) {
+				if( //newstreet.node1 != s.node1 && newstreet.node1 != s.node2 
+					//	&& newstreet.node2 != s.node1 && newstreet.node2 != s.node2 &&
+						Street.getIntersection(s, help_street)!=null){
+					intersections++;
+				}
+			}
+			inside = inside && (intersections%2 == 1);
+			angle+=9.9;
+		}	
+		if(inside)
+			return Street_Result.not_altered;
+		return Street_Result.fail;
+	}
+	
+	private ArrayList<Street> check_for_new_quarters(Street street,Boolean clockwise){
+		if(street == null || street.node1.streets.size() ==1 || street.node2.streets.size() ==1)
+			return null;
+		
+		ArrayList<Street> rt = new ArrayList<>();
+		if(!rt.contains(street))
+			rt.add(street);
+		else
+			System.out.println("contains");
+		System.out.println("Zacinam v " + street);
+		Node n = street.node1;
+		Street s = street.get_least_angled(n, clockwise,true);
+		
+	
+		if(s.node1 == n)
+			n = s.node2;
+		else
+			n = s.node1;
+		
+		while(s != street){
+			rt.add(s);
+			
+			//System.out.println(s);
+			Street s2 = s.get_least_angled(n, clockwise,true);
+			if(s2.node1 == n)
+				n = s2.node2;
+			else
+				n = s2.node1;
+			s = s2;
+		}
+
+		
 		return rt;
 	}
 
@@ -258,8 +400,57 @@ public class Street_Network {
 	 *
 	 * @param quarter the quarter
 	 */
-	void grow_minor_streets(ArrayList<Street> quarter){
+	private void grow_minor_streets(Quarter quarter){
+		System.out.println("Rostu male");
+		ArrayList<Node> to_grow_nodes = new ArrayList<>();
+		for (Street s: quarter.main_streets) {
+			if(!to_grow_nodes.contains(s.node1))
+				to_grow_nodes.add(s.node1);
+			if(!to_grow_nodes.contains(s.node2))
+				to_grow_nodes.add(s.node2);
+		}
+		int a = 0;
+		while(!to_grow_nodes.isEmpty()){
+			ArrayList<Node> chosen_nodes = choose_nodes_to_grow(to_grow_nodes);
+			for (Node n: chosen_nodes){
+				grow_street(n,false, quarter, to_grow_nodes);
+			}
+			a++;
+		}
+		
+		
+	}
+	
+	private void revert_changes(Node oldnode,Crossroad old_crossroad,Boolean major,List<Node> to_grow_nodes){
+		
+		System.out.println("revertuju");
+		current_new_node.streets.remove(current_new_street);
+		nodes.remove(current_new_node);
+		to_grow_nodes.remove(current_new_node);
+		oldnode.streets.remove(current_new_street);
+		oldnode.crossroad = old_crossroad;
+		oldnode.angle = oldnode.compute_angle();
+		
+		if(current_new_node.streets.size() == 2 && Math.abs(180 - Street.get_angle(current_new_node.streets.get(0), current_new_node.streets.get(1)))<0.0001){
+			Node node1 = current_new_node.streets.get(0).node1;
+			if(node1 == current_new_node)
+				node1 = current_new_node.streets.get(0).node2;
+			Node node2 = current_new_node.streets.get(1).node1;
+			if(node2 == current_new_node)
+				node2 = current_new_node.streets.get(0).node2;
+			node1.remove_street_to_node(current_new_node);
+			node2.remove_street_to_node(current_new_node);
+			Street street = new Street(node1, node2, major);
+			node1.streets.add(street);
+			node2.streets.add(street);
+			
+		}
 		
 	}
 
+	private Node make_new_node(double angle, boolean major, Node oldnode, double length){
+		double dx = Math.sin(angle * Math.PI / 180) * length;
+		double dy = Math.cos(angle * Math.PI / 180) * length;
+		return new Node(oldnode.point.x + dx, oldnode.point.y + dy, major);
+	}
 }

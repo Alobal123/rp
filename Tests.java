@@ -22,18 +22,14 @@ public class Tests {
 	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
-				
 		
+
 		create_crossroad(2, 180.0, 180.0);
-		create_crossroad(2, 60.0, 300.0);
-		create_crossroad(2, 120.0, 240.0);
+		create_crossroad(2, 90, 270);
 		
-		create_crossroad(3, 60.0,180.0,120.0);
-		create_crossroad(3, 60.0,120.0,180.0);
-		create_crossroad(3, 60.0,60.0,240.0);
-		create_crossroad(3, 180.0,120.0,60.0);
-		create_crossroad(3, 60.0,120.0,180.0);
-		
+		create_crossroad(3, 90,90,180.0);
+
+		create_crossroad(4, 90.0,90.0,90.0,90.0);
 		
 		City city = new City();
 		Street_Network network = new Street_Network(0.5);
@@ -42,6 +38,7 @@ public class Tests {
 			c.get_viable_crossroads(all_crossroads);
 			
 		}
+		network.all_crossroads = all_crossroads;
 		
 		
 		Node node1 = (new Node(0, 0, true));

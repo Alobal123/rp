@@ -51,36 +51,35 @@ public class Street
  	 * @param clockwise the clockwise
  	 * @return the _least_angled
  	 */
- 	public Street get_least_angled(Node n, Boolean clockwise){
-		 double min = 500;
+ 	public Street get_least_angled(Node n, Boolean clockwise, Boolean major){
+		 n.sort();
+		 int index = n.streets.indexOf(this);
+		 int count = n.streets.size();
 		 
-		 Street rt = null;
-		 int cc = 1;
-		 if (!clockwise)
-			 cc = -1;
-		 for (Street s: n.streets) {
-			 double angle = cc*get_angle(this,s);
-			 if( s!= this && angle>0 && angle < min){
-				 rt = s;
-				 min = angle;
-			 }
-
+		 if(!major){
+			 if(clockwise)
+				 return (n.streets.get((index+count-1) % count));
+			 else
+				 return (n.streets.get((index+count+1) % count));
 		 }
-		 if(rt == null){
-			 min = 500;
-			
-			 for (Street s: n.streets) {
-				 double angle = cc* get_angle(this,s);
-				 if(s != this && angle<0 && -1*angle < min){
-					 rt = s;
-					 min =  -1*angle;
-				 } 
+		 else{
+			 
+			 int summand = 1;
+			 if(!clockwise)
+				 summand = -1;
+			 int counter = summand;
+			 while(!(n.streets.get((index+count + counter) % count)).major){
+				 counter += summand;
 			 }
+			 return n.streets.get((index+count + counter) % count);
 		 }
-		 return rt;
+		 
+		 
 	 }
 	
-	 
+	double get_length(){
+		return Point.dist(node1.point, node2.point);
+	}
  	
  	
 	 /**
@@ -108,9 +107,34 @@ public class Street
  		double as2 = s2.get_absolute_angle(node);
  		return (360 + (as2 -as1))%360;
  	}
-			
+	static Point getIntersection(Street s1,Street s2){
+		double i_x,i_y;
+		double p0_x =  s1.node2.point.x;
+		double p0_y =  s1.node2.point.y;
+		double p1_x =  s1.node1.point.x;
+		double p1_y =  s1.node1.point.y;
+		double p2_x =  s2.node2.point.x;
+		double p2_y =  s2.node2.point.y;
+		double p3_x =  s2.node1.point.x;
+		double p3_y =  s2.node1.point.y;
+		double s1_x, s1_y, s2_x, s2_y;
+		s1_x = p1_x - p0_x;
+		s1_y = p1_y - p0_y;
+		s2_x = p3_x - p2_x;
+		s2_y = p3_y - p2_y;
+		double s,t;
+		s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
+		t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
+		   if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
+		    {
+		        i_x = p0_x + (t * s1_x);
+		        i_y = p0_y + (t * s1_y);
+		        return new Point(i_x, i_y);
+		    }
+		return null;
+	}
 	
-	public double get_absolute_angle(Node node){
+	double get_absolute_angle(Node node){
 		double angle = 0;
 		if(node == node1){
 			angle = Point.angleBetween(this.node2.point.minus(this.node1.point), new Point(0,1));
@@ -122,16 +146,13 @@ public class Street
 		return ( 360 + angle) % 360;
 	}
 
-		
-		
-	
 	 
 	 /* (non-Javadoc)
  	 * @see java.lang.Object#toString()
  	 */
  	@Override
 	public String toString(){
-		return "Street from (" + node1.point.x + " , " + node1.point.y + ") to (" + node2.point.x + " , " + node2.point.y + ")";
+		return "Street from (" + node1.point  +" to "  + node2.point;
 		 
 	 }
 }
