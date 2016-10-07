@@ -113,7 +113,7 @@ public class Crossroad implements Serializable {
 			if (c.number_of_roads == this.number_of_roads) {
 					int same_angles = 0;
 					for (int j = 0; j < c.number_of_roads; j++) {
-						if(Math.abs( c.angles.get((j) % c.number_of_roads) - this.angles.get(j)) < 0.00000001){ //TODO nastavit spravnou konstantu
+						if(Math.abs( c.angles.get((j) % c.number_of_roads) - this.angles.get(j)) < 0.000001){ //TODO nastavit spravnou konstantu
 							same_angles++;
 						}
 					}

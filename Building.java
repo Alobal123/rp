@@ -97,7 +97,6 @@ public class Building implements Serializable{
 				placement.set(i, RotatePoint(placement.get(i), placement.get(0), angle));
 		}
 		create_borders();
-		
 	}
 	
 	/**
@@ -159,19 +158,21 @@ public class Building implements Serializable{
 			place(new Point(ratio2*street.node1.point.x + ratio1*street.node2.point.x, ratio2*street.node1.point.y + ratio1*street.node2.point.y));
 		}
 		small = borders.get(0);
-		rotate(Street.get_angle(street, small));
 		if(rotation){
 			rotate(180.0);
 		}
+		
+		double angle = Math.min(Street.get_angle(street, small), (360+180-Street.get_angle(street, small))%360);
+		rotate(angle);
 		move_away_from_street(street, settings.street_width + 0.001, minus);
-		boolean succes = control(cp);
+		boolean succes = control(cp,street,node1);
 		if(succes){
 			for(Street s: cp.streets){
 				if(s !=  street){
 					move_away_from_street(s, settings.street_width, true);
-					succes = succes && control(cp);
+					succes = succes && control(cp,street,node1);
 					move_away_from_street(s, 2*settings.street_width, false);
-					succes = succes && control(cp);
+					succes = succes && control(cp,street,node1);
 					move_away_from_street(s, settings.street_width, true);
 				}
 			}
@@ -191,8 +192,13 @@ public class Building implements Serializable{
 	 * @param cp pozemek, ve kterém má být budova umístìna
 	 * @return zda je budova správnì umístìna
 	 */
-	private boolean control(City_part cp){
+	private boolean control(City_part cp,Street s,boolean node1){
 		boolean succes = false;
+		Node node = s.node1;
+		if(!node1)
+			node = s.node2;
+		
+		
 		if(cp.check_if_inside(new Node(center.x,center.y,null)) == Street_Result.not_altered){
 			succes = true;
 		}
@@ -206,6 +212,9 @@ public class Building implements Serializable{
 				}
 			}
 		}
+		//if(succes && !(Math.abs(s.get_absolute_angle(node)- this.borders.get(0).get_absolute_angle(this.borders.get(0).node1))<0.0001))
+			//succes = false;
+		
 		return succes;
 	}
 	

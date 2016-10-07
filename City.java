@@ -169,7 +169,7 @@ public class City implements Serializable{
 		 * @return Hodnota mìsta.
 		 */
 		private double evaluate(){
-			return 0.5*local_value() + 0.5*global_value();
+			return (1-settings.global_weight)*local_value() + settings.global_weight*global_value();
 		}
 		
 		/**

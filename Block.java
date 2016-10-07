@@ -181,7 +181,8 @@ public class Block extends City_part implements Serializable{
 		for(Node n: lot_borders){
 			//if(n.streets.size() == 1){
 			for(double d: angles){
-				Node newnode = Node.make_new_node(d, Street_type.lot_border, n, 1000);
+				double angle = n.streets.get(0).get_absolute_angle(n);
+				Node newnode = Node.make_new_node((d+angle)%360, Street_type.lot_border, n, 1000);
 				newnode.built = true;
 				Street newstreet = new Street(n, newnode, Street_type.lot_border);
 				boolean is_street = false;

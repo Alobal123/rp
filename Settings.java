@@ -61,4 +61,6 @@ public class Settings implements Serializable{
 	/**Šíøka ulice. */
 	Double street_width = 0.005;
 	
+	Double global_weight = 0.5;
+	
 }

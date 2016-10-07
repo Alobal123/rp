@@ -17,6 +17,10 @@ import java.awt.event.ActionListener;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import java.awt.Font;
+import javax.swing.JSlider;
+import javax.swing.SwingConstants;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 
 public class Param_window extends JDialog {
 
@@ -45,7 +49,7 @@ public class Param_window extends JDialog {
 		this.settings = settings;
 		this.setTitle("Parameters");
 		Param_window thiswindow = this;
-		setBounds(100, 100, 464, 527);
+		setBounds(100, 100, 468, 594);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -494,6 +498,30 @@ public class Param_window extends JDialog {
 				textField_13.setColumns(10);
 				textField_13.setText(Double.toString(settings.minor_street_capacity));
 				contentPanel.add(textField_13);
+				{
+					JLabel lblNewLabel_7 = new JLabel("Simulation Goals");
+					lblNewLabel_7.setFont(new Font("Tahoma", Font.BOLD, 11));
+					contentPanel.add(lblNewLabel_7);
+				}
+				{
+					JLabel lblNewLabel_8 = new JLabel("");
+					contentPanel.add(lblNewLabel_8);
+				}
+				{
+					JLabel lblNewLabel_9 = new JLabel("Weight of global goals");
+					contentPanel.add(lblNewLabel_9);
+				}
+				{
+					JSlider slider = new JSlider();
+					slider.setValue((int) (settings.global_weight*100));
+					slider.addChangeListener(new ChangeListener() {
+						public void stateChanged(ChangeEvent arg0) {
+							settings.global_weight = slider.getValue()/100.0;
+						}
+					});
+					slider.setToolTipText("");
+					contentPanel.add(slider);
+				}
 				textField_13.getDocument().addDocumentListener(new DocumentListener() {
 					  public void changedUpdate(DocumentEvent e) {
 						  update();

@@ -151,7 +151,12 @@ public class Cross_window extends JDialog {
 	private ArrayList<Crossroad> remove_duplicates (ArrayList<Crossroad> all_crossroads){
 		ArrayList<Crossroad> without_duplicates = new ArrayList<>();
 		for(Crossroad c: all_crossroads){
-			if(!without_duplicates.contains(c))
+			boolean contains = false;
+			for(Crossroad c2 : without_duplicates){
+				if(c2.get_all_rotations().contains(c))
+					contains = true;
+			}
+			if(!contains)
 				without_duplicates.add(c);
 		}
 		return without_duplicates;
