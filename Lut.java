@@ -73,16 +73,22 @@ public class Lut implements Serializable{
 		if(val.type == Valuation_Types.clustering)
 			val.influencing_lut = this;
 	}
+	
 	public void find_min_area(){
 		double min_area = 0;
-			for(Building b: buildings){
-				if(b.area > min_area){
-					min_area = b.area;
-				}
+		
+		for(Building b: buildings){
+			
+			if(b.area > min_area){
+					
+				min_area = b.area;
 			}
-			if(min_area==0)
-				min_area = 0.01;	
-			this.minimal_lot_area = min_area*1.5;
+		}
+			
+		if(min_area==0)
+			min_area = 0.01;	
+		this.minimal_lot_area = min_area*6;
+		//System.out.println(minimal_lot_area);
 	}
 	
 	/**

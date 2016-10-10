@@ -250,9 +250,9 @@ public class City implements Serializable{
 				for (Node node : b.get_nodes_once()) {
 					node.residents -= b.lut.residents;
 				}
-				b.lut = bestlut;
 				
-				for(Node n: b.lot_borders){
+				b.lut = bestlut;
+				/*for(Node n: b.lot_borders){
 					Iterator<Street> i = n.streets.iterator();
 						while (i.hasNext()) {
 						   Street s = i.next(); 
@@ -262,12 +262,37 @@ public class City implements Serializable{
 				}
 				Iterator<Node> i = b.lot_borders.iterator();
 				while (i.hasNext()) {
-				   Node n = i.next(); 
+				  Node n = i.next(); 
 				  if(n.major == Street_type.lot_border)
 					  i.remove();
+				}*/
+				
+				b.lot_borders = new ArrayList<>();
+				for(Node n: b.get_nodes_once()){
+					b.lot_borders.add(n.copy_node(b));
 				}
-
+				
+				ArrayList<Node> new_lot_borders = new ArrayList<>();
+				for(Node n: b.lot_borders){
+					Node newnode = new Node(n.point.x, n.point.y, n.major,true);
+					new_lot_borders.add(newnode);
+				}
+				
+				HashSet<Street> already_added = new HashSet<>();
+				for(Node n: b.lot_borders){
+					for(Street s: n.streets){
+						if(!already_added.contains(s)){
+							b.substitute_streets(s,new_lot_borders);
+							already_added.add(s);
+						}
+					}
+				}
+				b.remove_useless_nodes(new_lot_borders);
+				
+				b.lot_borders = new_lot_borders;
+				
 				b.contained_city_parts = new ArrayList<>();
+
 				b.divide_to_convex();
 
 				for(City_part current_part: b.contained_city_parts){
@@ -286,11 +311,3 @@ public class City implements Serializable{
 		}
 		
 	}
-	
-	
-	
-	
-
-	
-	
-

@@ -164,12 +164,26 @@ public class Street_Network implements Serializable{
 				quarter.contained_city_parts.remove(1);
 			else
 				quarter.contained_city_parts.remove(0);
-			//System.out.println("prvni " + quarter.contained_city_parts.get(0).streets.size());
-			//System.out.println("druhy " +quarter.contained_city_parts.get(1).streets.size());
 		}
 	}
 	
 	
+	private void control_blocks(Quarter q) {
+		ArrayList<City_part> to_remove = new ArrayList<>();
+		for(City_part cp: q.contained_city_parts){
+			for(City_part cp2 : q.contained_city_parts){
+				if(cp != cp2){
+					Node center = new Node(cp2.center.x, cp2.center.y, null);
+					if(cp.check_if_inside(center) == Street_Result.not_altered)
+						to_remove.add(cp2);
+				}
+			}
+		}
+		if(!to_remove.isEmpty())
+			System.out.println("odstraneno");
+		q.contained_city_parts.removeAll(to_remove);
+		
+	}
 	/**
 	 * Vybere ze seznamu uzlù nìkolik uzlù, podle toho jak jsou vzdálené od center rùstu.
 	 *
@@ -816,10 +830,9 @@ public class Street_Network implements Serializable{
 
 	private static boolean is_biggest (City_part bigger, City_part smaller){
 		HashSet<Node> nodes = new HashSet<>();
-		
-		if(bigger.area<= smaller.area)
+		if(Math.abs(bigger.area - smaller.area)<0.0001)
 			return true;
-		
+			
 		for(Street s: bigger.streets){
 			if(bigger.streets.indexOf(s) == bigger.streets.lastIndexOf(s)){
 				nodes.add(s.node1);
@@ -827,6 +840,11 @@ public class Street_Network implements Serializable{
 			}
 		}
 		
-		return smaller.get_nodes().containsAll(nodes);
+		ArrayList<Node> borders = new ArrayList<>(nodes);
+		/*if(bigger instanceof Block){
+			((Block) bigger).remove_useless_nodes(borders);
+		}*/
+		
+		return smaller.get_nodes().containsAll(borders);
 	}
 } 

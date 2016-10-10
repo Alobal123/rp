@@ -13,7 +13,7 @@ import krabec.citysimulator.Node.NodeComparator;
 /**
  * Tøída reprezentující uzel v grafu ulic, typicky tedy køiovatku.
  */
-public class Node implements Serializable{
+public class Node implements Serializable, Comparable{
 	
 	
 	/**
@@ -240,5 +240,17 @@ public class Node implements Serializable{
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public int compareTo(Object o) {
+		Node n = (Node) o;
+		if(point.x>n.point.x)
+			return 1;
+		else if(point.x==n.point.x)
+			return 0;
+		else 
+			return -1;
+		
 	}
 }

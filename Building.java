@@ -36,6 +36,7 @@ public class Building implements Serializable{
 		this.name = name;
 		this.points = points;
 		place(new Point(0, 0));
+		find_area();
 	}
 	
 	/**
@@ -50,6 +51,7 @@ public class Building implements Serializable{
 		this.points = points;
 		this.name = "New Building";
 		place(new Point(0, 0));
+		find_area();
 	}
 
 	/**
@@ -119,15 +121,8 @@ public class Building implements Serializable{
 	 * Vypoèítá plochu budovy.
 	 */
 	public void find_area(){
-		double area = 0;         // Accumulates area in the loop
-		int j;
-		int n = points.size()-1;
-		for (int i=0; i<n; i++){
-			j = (i+1)%n;
-			area += points.get(i).x * points.get(j).y;
-			area -= points.get(j).x * points.get(i).y;
-		}
-		this.area =  (Math.abs(area/2));
+		
+		this.area =  get_front_length()*get_side_length();
 	}
 	
 	
@@ -194,11 +189,6 @@ public class Building implements Serializable{
 	 */
 	private boolean control(City_part cp,Street s,boolean node1){
 		boolean succes = false;
-		Node node = s.node1;
-		if(!node1)
-			node = s.node2;
-		
-		
 		if(cp.check_if_inside(new Node(center.x,center.y,null)) == Street_Result.not_altered){
 			succes = true;
 		}
@@ -212,8 +202,6 @@ public class Building implements Serializable{
 				}
 			}
 		}
-		//if(succes && !(Math.abs(s.get_absolute_angle(node)- this.borders.get(0).get_absolute_angle(this.borders.get(0).node1))<0.0001))
-			//succes = false;
 		
 		return succes;
 	}
@@ -255,7 +243,6 @@ public class Building implements Serializable{
 	 * @return the front length
 	 */
 	public double get_front_length(){
-		System.out.println(borders.get(0));
 		return borders.get(0).length;
 	}
 	

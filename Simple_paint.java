@@ -2,23 +2,19 @@ package krabec.citysimulator;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
-import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.ConcurrentModificationException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
-import javax.imageio.ImageIO;
 
 public class Simple_paint implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3071466066619399273L;
 	int size = 5000;
 	int magn = 400; 
 	City_part current_part = null;
@@ -38,6 +34,9 @@ public class Simple_paint implements Serializable{
 			Quarter q = network.quarters.get(i);
 			for (int j = 0; j < q.contained_city_parts.size(); j++) {
 				Block b = (Block) q.contained_city_parts.get(j);
+				
+				//color_part(b, g, rnd, true, null);
+				
 				if(b.lut != null && b.built){
 					for (int k = 0; k < b.contained_city_parts.size(); k++) {
 						color_part(b.contained_city_parts.get(k),g,rnd,true,b.lut.color);
@@ -92,7 +91,6 @@ public class Simple_paint implements Serializable{
 		
 	if(q instanceof Block){
 		for (int i = 0; i < ((Block)q).lot_borders.size(); i++) {
-			
 			Node n = ((Block)q).lot_borders.get(i);
 			draw_node(n, g, Color.magenta);
 			for(Street s: n.streets){
@@ -163,21 +161,15 @@ public class Simple_paint implements Serializable{
 		double y2 = (y - size/2.0)/(magn/-2.0);
 		Node trynode = new Node(x2, y2, Street_type.lot_border);
 		
-		int qr = 0;
-		int br = 0;
-		int lr = 0;
 		Collections.shuffle(network.quarters);
 		for (Quarter q: network.quarters){
 				if(q.check_if_inside(trynode) == Street_Result.not_altered){
-					qr++;
 					this.current_block = q;
 					for(City_part block: q.contained_city_parts){
 						if(block.check_if_inside(trynode) == Street_Result.not_altered){
-							br++;
 							this.current_block = block;
 							for(City_part lot:block.contained_city_parts){
 								if(lot.check_if_inside(trynode) == Street_Result.not_altered){
-									lr++;
 									this.current_part = lot;
 								}
 									
@@ -189,9 +181,7 @@ public class Simple_paint implements Serializable{
 				}
 		}
 		if(current_block != null){
-			//System.out.println("Quarters "+qr);
-			//System.out.println("BLocks "+br);
-			//System.out.println("Lots "+lr);
+
 		}
 		return this.current_block;
 		

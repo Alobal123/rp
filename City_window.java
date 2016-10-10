@@ -603,6 +603,7 @@ public class City_window extends JFrame {
 		city.luts.add(commercial);
 		city.luts.add(schools);
 		city.luts.add(parks);
+		
 		for(Lut lut: city.luts){
 			lut.find_min_area();
 		}

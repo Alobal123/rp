@@ -6,6 +6,7 @@ package krabec.citysimulator;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -46,7 +47,6 @@ public class Block extends City_part implements Serializable{
 		}
 		
 		HashSet<Street> already_added = new HashSet<>();
-		//System.out.println(new_lot_borders.size());
 		for(Node n: lot_borders){
 			for(Street s: n.streets){
 				if(!already_added.contains(s)){
@@ -55,8 +55,34 @@ public class Block extends City_part implements Serializable{
 				}
 			}
 		}
+		remove_useless_nodes( new_lot_borders);
 		lot_borders = new_lot_borders;
 		find_area();
+	}
+	
+	public void remove_useless_nodes(ArrayList<Node> borders){
+		Iterator<Node> i = borders.iterator();
+		while(i.hasNext()){
+			Node n = i.next();
+			if(n.streets.size() == 2){
+				Street s0 = n.streets.get(0);
+				Street s1 = n.streets.get(1);
+				
+				if( Math.abs(Street.get_oriented_angle(s0,s1 ,n)-180.0) <0.0001){
+					Node n0 = s0.other_node(n);
+					Node n1 = s1.other_node(n);
+					n0.streets.remove(s0);
+					n1.streets.remove(s1);
+	
+					Street s = new Street(n0, n1, Street_type.minor);
+					n0.streets.add(s);
+					n1.streets.add(s);
+					i.remove();
+					
+				}
+			}
+			
+		}
 	}
 	
 	/**
@@ -65,7 +91,7 @@ public class Block extends City_part implements Serializable{
 	 * @param s ulice
 	 * @param nodes seznam uzlù
 	 */
-	private void substitute_streets(Street s, ArrayList<Node> nodes){
+	public void substitute_streets(Street s, ArrayList<Node> nodes){
 		Node node1 = findnode(s.node1,nodes);
 		Node node2 = findnode(s.node2,nodes);
 		if(node1 != null && node2 != null){
@@ -83,7 +109,7 @@ public class Block extends City_part implements Serializable{
 	 * @param nodes seznam uzlù
 	 * @return the node
 	 */
-	private Node findnode(Node node,ArrayList<Node> nodes){
+	public Node findnode(Node node,ArrayList<Node> nodes){
 		for(Node n: nodes){
 			if(Point.dist(n.point, node.point)<0.0000001)
 				return n;
@@ -175,92 +201,154 @@ public class Block extends City_part implements Serializable{
 	 * Upraví hranice pozemkù tohoto bloku tak, aby pozemky byly konvexní. Poté rozdìlí pozemky tak, aby nebyly pøíliš velké.
 	 */
 	public void divide_to_convex(){	
+		
+		
 		ArrayList<Node> new_borders = new  ArrayList<>();
 		new_borders.addAll(lot_borders);
-		double[] angles = {0,90,180,270};
-		for(Node n: lot_borders){
-			//if(n.streets.size() == 1){
-			for(double d: angles){
-				double angle = n.streets.get(0).get_absolute_angle(n);
-				Node newnode = Node.make_new_node((d+angle)%360, Street_type.lot_border, n, 1000);
-				newnode.built = true;
-				Street newstreet = new Street(n, newnode, Street_type.lot_border);
-				boolean is_street = false;
-				for(Street s: n.streets){
-					if(Street.get_angle(s, newstreet) <0.1){
-						is_street = true;
-						break;
-					}
-				}
-				if(!is_street)
-					find_crossing(newstreet, n, newnode, new_borders);
-			}
-		//	}
-		}
+		Triangulation.triangulate_block(new_borders);
 		lot_borders = new_borders;
+		remove_crossings();
+		remove_outsiders();
+		remove_diagonals();
 		find_lots();
+		
 		divide_until(lut.minimal_lot_area);
-;
+		control();
 		
 	}
 	
-	/**
-	 * Najde, zda a kde se køíží ulice newstreet s ulicemi obsaženými v uzlech v seznamu list.
-	 * V místì køížení vytvoøí nový uzel a ulici v nìm ukonèí. 
-	 * 
-	 *
-	 * @param newstreet the newstreet
-	 * @param oldnode the oldnode
-	 * @param newnode the newnode
-	 * @param list the list
-	 */
-	private void find_crossing(Street newstreet,Node oldnode,Node newnode,ArrayList<Node> list){
-		Street intersecting = null;
-		Point intersection = null;
-		double min = Point.dist(oldnode.point, newnode.point);
-		for (Node n: list) {
-			for(Street street: n.streets){
-				if(!street.equals(newstreet)){
-					Point intersect = null;
-					intersect  = Street.getIntersection(street, newstreet);
-					if(intersect != null && Point.dist(oldnode.point, intersect) < min
-							&& Point.dist(intersect, street.node1.point) > 0.00001 && Point.dist(intersect, street.node2.point) > 0.00001){
-						intersecting = street;
-						intersection = intersect;
-						min = Point.dist(oldnode.point, intersect);
-					}
-				}	
+	private void remove_crossings(){
+		class cross{
+			Street s1;
+			Street s2;
+			public cross(Street s1,Street s2){
+				this.s1 = s1;
+				this.s2 = s2;
+			}
+			@Override
+			public boolean equals(Object o){
+				cross c = (cross)o;
+				if(s1 == c.s1 && s2 == c.s2)
+					return true;
+				if(s1 == c.s2 && s2 == c.s1)
+					return true;	
+				return false;
 			}
 		}
-		if(intersecting != null){
-			Node trynode = new Node(intersection.x, intersection.y, intersecting.major,intersecting.built);
-			Street newstreet1 = new Street(intersecting.node1, trynode, intersecting.major,intersecting.built);
-			Street newstreet2 = new Street(intersecting.node2,trynode,intersecting.major,intersecting.built);
-			Street newstreet3 = new Street(oldnode,trynode,Street_type.lot_border,true);
-			ArrayList<Double> angles = new ArrayList<>();
-			angles.add(180.0);
-			double angle = Street.get_angle(newstreet1, newstreet3);
-			if(angle>180)
-				angle = angle -180;
-			angles.add(angle);
-			angles.add(180.0 - angle);
-			Crossroad newcross = new Crossroad(3, angles);
-			
-			trynode.streets.add(newstreet1);
-			trynode.streets.add(newstreet2);
-			trynode.streets.add(newstreet3);	
-			intersecting.node1.streets.add(newstreet1);
-			intersecting.node2.streets.add(newstreet2);
-			intersecting.node1.streets.remove(intersecting);
-			intersecting.node2.streets.remove(intersecting);
-			trynode.crossroad = newcross;
-			
-			oldnode.streets.add(newstreet3);
-			trynode.angle = trynode.compute_angle();
-			list.add(trynode);
+		
+		HashSet<cross> crosses = new HashSet<>();
+		for(Node n: lot_borders){
+			for(Node n2:lot_borders){
+				if(n != n2){
+					for(Street s : n.streets){
+						for(Street s2 : n2.streets){
+							if(s.node1 != s2.node1  && s.node2 != s2.node1  && s.node1 != s2.node2  && s.node2 != s2.node2  && Street.getIntersection(s, s2) != null)
+								crosses.add(new cross(s,s2));
+						}
+					}
+				}
+			}
+		}
+		for(cross c: crosses){
+			if(c.s1.major != Street_type.lot_border){
+				c.s1.node1.streets.remove(c.s1);
+				c.s1.node2.streets.remove(c.s1);
+			}
+			else{
+				c.s2.node1.streets.remove(c.s2);
+				c.s2.node2.streets.remove(c.s2);
+			}
+		}
+	}
+
+	private void remove_outsiders(){
+		HashSet<Street> to_remove = new HashSet<>();
+		for(Node n: lot_borders){
+			for(Street s: n.streets){
+				Node middle = new Node((s.node1.point.x + s.node2.point.x)/2, (s.node1.point.y + s.node2.point.y)/2, null);
+				if(check_if_inside(middle) == Street_Result.fail)
+					to_remove.add(s);
+			}
+		}
+		for(Street s: to_remove){
+			s.node1.streets.remove(s);
+			s.node2.streets.remove(s);
+		}
+	}
+	
+	private void remove_diagonals(){
+		HashSet<Node> corners = new HashSet<>();
+		for(Node n: lot_borders){
+				if(n.major != Street_type.lot_border){
+					corners.add(n);
+				}		
+		}
+		HashSet<Node> to_try = new HashSet<>(corners);
+		while(to_try.size() > 0){
+			Iterator<Node> i = to_try.iterator();
+			remove_corner(i.next(), corners,to_try);
+		}
+	}
+	
+	private void remove_corner(Node n, HashSet<Node> corners, HashSet<Node> to_try){
+		Street s1 = null;
+		Street s2 = null;
+		for(Street s : n.streets){
+			if(corners.contains(s.node1) && corners.contains(s.node2)){
+				if(s1 == null)
+					s1 =s;
+				else
+					s2 =s;
+			}
 		}
 		
+		if(s1 != null && s2 != null){
+			Node n1 = s1.other_node(n);
+			Node n2 = s2.other_node(n);
+			if(Triangulation.street_exists(n1, n2) != null){
+				Node n3 = find_triangle(n1, n2,n);
+				Street to_remove = Triangulation.street_exists(n1, n2);
+				if(n3 != null && to_remove.major == Street_type.lot_border){
+					
+					to_remove.node1.streets.remove(to_remove);
+					to_remove.node2.streets.remove(to_remove);
+					corners.add(n);
+					corners.add(n1);
+					corners.add(n2);
+					corners.add(n3);
+					
+				}
+	
+			}
+		}
+		to_try.remove(n);
+		
+		
 	}
+	private Node find_triangle(Node n1, Node n2, Node n){
+		for(Street s1: n1.streets){
+			Node newnode = s1.other_node(n1);
+			for(Street s2: n2.streets){
+				if(s2.other_node(n2) == newnode && newnode != n)
+					return newnode;
+			}
+		}
+		
+		return null;
+	}
+	
+	private void control() {
+		ArrayList<City_part> to_remove = new ArrayList<>();
+		for(City_part cp: contained_city_parts){
+					Node center = new Node(cp.center.x, cp.center.y, null);
+					if(check_if_inside(center) == Street_Result.fail)
+						to_remove.add(cp);
+		}
+		if(!to_remove.isEmpty())
+		contained_city_parts.removeAll(to_remove);
+		
+	}
+
 
 	
 	/**
@@ -288,8 +376,6 @@ public class Block extends City_part implements Serializable{
 	private void divide_until(double minarea){
 		Lot lot = find_big_lot(minarea);
 		int i =0;
-	//	if(lot == null)
-	//		System.out.println("null");
 		while(i<50 && lot != null){
 			lot.divide(this);
 			find_lots();
