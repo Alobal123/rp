@@ -48,10 +48,11 @@ public class City_window extends JFrame {
 	boolean paused = true;
 	boolean started = false;
 	Simple_paint simple_paint;
+	Socket_Writer socket_writer;
 	JButton start_button;
 	JCheckBox growth_box;
 	JCheckBox center_box;
-	Timer timer = new Timer(1, new ActionListener() {
+	Timer timer = new Timer(100, new ActionListener() {
 		
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
@@ -149,6 +150,7 @@ public class City_window extends JFrame {
 					panel.city = result;
 					simple_paint = new Simple_paint(city.network);
 					simple_paint.city = city;
+					socket_writer = new Socket_Writer(8787, city.network);
 					thiswindow.repaint();
 					ois.close();
 				  }
@@ -332,6 +334,20 @@ public class City_window extends JFrame {
 		JPanel panel_2 = new JPanel();
 		panel_1.add(panel_2, BorderLayout.CENTER);
 		
+		JButton button3D = new JButton("Show in 3D");
+		button3D.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				try{
+					if(socket_writer != null)
+						socket_writer.Send_city();
+				}
+				catch(IOException e){
+					
+				}
+			}
+		});
+		panel_2.add(button3D);
+		
 		JButton btnNewButton = new JButton("Start");
 		panel_2.add(btnNewButton);
 		start_button = btnNewButton;
@@ -463,9 +479,6 @@ public class City_window extends JFrame {
 		return s;
 		
 	}
-	
-	
-		
 	private City create_city(){
 		ArrayList<Crossroad> all_crossroads = new ArrayList<>();
 		create_crossroad(all_crossroads,2, 180.0, 180.0);
@@ -483,6 +496,12 @@ public class City_window extends JFrame {
 		
 		city = new City(network);
 		simple_paint = new Simple_paint(city.network);
+		try {
+			socket_writer = new Socket_Writer(8787, city.network);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		simple_paint.city = city;
 		
 		ArrayList<Point> points = new ArrayList<>();
@@ -535,27 +554,27 @@ public class City_window extends JFrame {
 		Building public_building = new Building(points,"Public Building");
 		
 		
-		Lut low_d_residential =  new Lut("Low density residential", 1, 0.4,Color.blue);
+		Lut low_d_residential =  new Lut("Low density residential", 1, 0.4,Color.blue,network.settings);
 		low_d_residential.add_val(new Valuation((float) 0.45,Valuation_Types.traffic,Mapping.linear_down,0,50));
 		low_d_residential.add_val(new Valuation((float) 0.4, Valuation_Types.influence, Mapping.linear_down, 0, 0.1));
 		low_d_residential.add_val(new Valuation((float)0.15, Valuation_Types.influence, Mapping.linear_up, 0, 20));
 		low_d_residential.buildings.add(house);
 		
-		Lut high_d_residential = new Lut("High density residential", 5, 0.2,Color.cyan);
+		Lut high_d_residential = new Lut("High density residential", 5, 0.2,Color.cyan,network.settings);
 		high_d_residential.add_val(new Valuation((float)0.4, Valuation_Types.influence, Mapping.linear_down, 0, 0.1));
 		high_d_residential.add_val(new Valuation((float)0.2, Valuation_Types.citycenter,Mapping.linear_down,0,20));
 		high_d_residential.add_val(new Valuation((float)0.2, Valuation_Types.traffic, Mapping.linear_down, 5, 20));
 		high_d_residential.add_val(new Valuation((float)0.2, Valuation_Types.influence, Mapping.linear_up, 0,0.4 ));
 		high_d_residential.buildings.add(block_of_flats);
 		
-		Lut low_d_industrial = new Lut("Low density industrial", 2, 0.08,Color.orange);
+		Lut low_d_industrial = new Lut("Low density industrial", 2, 0.08,Color.orange,network.settings);
 		low_d_industrial.add_val(new Valuation((float) 0.4, Valuation_Types.influence, Mapping.linear_up,0.1, 0.8));
 		low_d_industrial.add_val(new Valuation((float) 0.3, Valuation_Types.citycenter, Mapping.linear_down, 0, 20));
 		low_d_industrial.add_val(new Valuation((float) 0.3, Valuation_Types.constant, Mapping.constant, 1, 1));
 		low_d_industrial.buildings.add(small_factory);
 		low_d_industrial.buildings.add(office);
 		
-		Lut high_d_industrial = new Lut("High density industrial", 3,0.1,Color.red.brighter());
+		Lut high_d_industrial = new Lut("High density industrial", 3,0.1,Color.red.brighter(),network.settings);
 		high_d_industrial.add_val(new Valuation((float)0.4, Valuation_Types.citycenter, Mapping.linear_down, 0, 20));
 		high_d_industrial.add_val(new Valuation((float)0.35, Valuation_Types.influence, Mapping.linear_up, 0, 0.3));
 		high_d_industrial.add_val(new Valuation((float) 0.25, Valuation_Types.influence, Mapping.linear_down, 0, 0.2));
@@ -563,17 +582,17 @@ public class City_window extends JFrame {
 		high_d_industrial.buildings.add(small_factory);
 		high_d_industrial.buildings.add(office);
 		
-		Lut commercial = new Lut("Commercial", 3,0.015,Color.pink);
+		Lut commercial = new Lut("Commercial", 3,0.015,Color.pink,network.settings);
 		commercial.add_val(new Valuation((float) 0.75, Valuation_Types.traffic, Mapping.linear_up, 5, 20));
 		commercial.add_val(new Valuation((float) 0.25, Valuation_Types.influence, Mapping.linear_up, 0.2, 0.8));
 		commercial.buildings.add(office);
 		
-		Lut parks = new  Lut("Parks", 1,0.04,Color.green);
+		Lut parks = new  Lut("Parks", 1,0.04,Color.green,network.settings);
 		parks.add_val(new Valuation((float) 0.4, Valuation_Types.influence, Mapping.linear_up, 0, 1));
 		parks.add_val(new Valuation((float) 0.6, Valuation_Types.citycenter, Mapping.linear_down, 0, 20));
 		parks.buildings.add(park);
 		
-		Lut schools = new Lut("Public", 2, 0.03,Color.white);
+		Lut schools = new Lut("Public", 2, 0.03,Color.white,network.settings);
 		schools.add_val(new Valuation((float) 0.2, Valuation_Types.influence, Mapping.linear_up, 0, 0.3));
 		schools.add_val(new Valuation((float) 0.2, Valuation_Types.citycenter, Mapping.linear_down, 0, 20));
 		schools.add_val(new Valuation((float) 0.6, Valuation_Types.influence, Mapping.linear_down, 0, 0.3));

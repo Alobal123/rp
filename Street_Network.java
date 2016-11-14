@@ -830,7 +830,7 @@ public class Street_Network implements Serializable{
 
 	private static boolean is_biggest (City_part bigger, City_part smaller){
 		HashSet<Node> nodes = new HashSet<>();
-		if(Math.abs(bigger.area - smaller.area)<0.0001)
+		if(Math.abs(bigger.area - smaller.area)<0.001)
 			return true;
 			
 		for(Street s: bigger.streets){
@@ -844,7 +844,7 @@ public class Street_Network implements Serializable{
 		/*if(bigger instanceof Block){
 			((Block) bigger).remove_useless_nodes(borders);
 		}*/
-		
-		return smaller.get_nodes().containsAll(borders);
+		return false;
+		//return smaller.get_nodes().containsAll(borders);
 	}
 } 

@@ -106,7 +106,7 @@ public class Lut_window extends JDialog {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				panel.add(new Lut_panel(new Lut("New Lut",1,0,Color.black),thiswindow));
+				panel.add(new Lut_panel(new Lut("New Lut",1,0,Color.black,city_window.city.network.settings),thiswindow));
 				//panel.add(new_lut_button);
 				panel.updateUI();
 			}

@@ -40,7 +40,8 @@ public class Trip implements Serializable{
 	 * @param nd the nd
 	 */
 	public void add_traffic(Node_Distance nd){
-		this.path =  nd.get_path_dijkstra(start, end);
+		//this.path =  nd.get_path_dijkstra(start, end);
+		this.path = nd.get_Path_Astar(start, end);
 		for (Street street : path) {
 			street.traffic+=volume;
 		}

@@ -46,7 +46,7 @@ public class City implements Serializable{
 	 * Novým blokù urèí jejich nejvýhodnìjší Lut a poté ještì se pokusí vylepšit hodnotu celého mìsta 
 	 */
 	public void step(){
-		List<Node> changed_nodes = network.grow_major_streets(15);  //TODO pocitat kolik se ma narust hlavnich ulic
+		List<Node> changed_nodes = network.grow_major_streets(10);  //TODO pocitat kolik se ma narust hlavnich ulic
 		HashSet<Node> nodes_to_check = new HashSet<>();
 		for (Node node : changed_nodes) {
 			nodes_to_check.add(node);

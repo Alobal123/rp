@@ -26,6 +26,8 @@ public class Building implements Serializable{
 	/**Plocha budovy*/
 	double area;
 	
+	double angle = 0;
+	
 	/**
 	 * Konstruktor
 	 *
@@ -121,7 +123,6 @@ public class Building implements Serializable{
 	 * Vypoèítá plochu budovy.
 	 */
 	public void find_area(){
-		
 		this.area =  get_front_length()*get_side_length();
 	}
 	
@@ -141,7 +142,6 @@ public class Building implements Serializable{
 		
 		Street small = borders.get(0);
 		if(street.length < small.length){
-			//System.out.println("Je vetsi nez ulice");
 			return false;
 		}
 		double ratio1 = (street.length/2 - small.length/2)/street.length;	
@@ -155,20 +155,22 @@ public class Building implements Serializable{
 		small = borders.get(0);
 		if(rotation){
 			rotate(180.0);
+			this.angle += 180;
 		}
 		
 		double angle = Math.min(Street.get_angle(street, small), (360+180-Street.get_angle(street, small))%360);
 		rotate(angle);
-		move_away_from_street(street, settings.street_width + 0.001, minus);
+		this.angle += angle;	
+		move_away_from_street(street, settings.street_width/2 + 0.001, minus);
 		boolean succes = control(cp,street,node1);
 		if(succes){
 			for(Street s: cp.streets){
 				if(s !=  street){
-					move_away_from_street(s, settings.street_width, true);
+					move_away_from_street(s, settings.street_width/2, true);
 					succes = succes && control(cp,street,node1);
-					move_away_from_street(s, 2*settings.street_width, false);
+					move_away_from_street(s, 2*settings.street_width/2, false);
 					succes = succes && control(cp,street,node1);
-					move_away_from_street(s, settings.street_width, true);
+					move_away_from_street(s, settings.street_width/2, true);
 				}
 			}
 		}
@@ -177,6 +179,7 @@ public class Building implements Serializable{
 			return true;
 		else{
 			place(new Point(0,0));
+			this.angle = 0;
 			return false;
 		}
 	}
@@ -202,7 +205,6 @@ public class Building implements Serializable{
 				}
 			}
 		}
-		
 		return succes;
 	}
 	

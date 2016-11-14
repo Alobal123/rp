@@ -1,5 +1,6 @@
 package krabec.citysimulator;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,7 +37,7 @@ class XYZ {
 	}
 }
 
-public class Triangulation {
+public class Triangulation implements Serializable{
 
 	public static double EPSILON = 0.000001;
 

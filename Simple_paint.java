@@ -160,16 +160,21 @@ public class Simple_paint implements Serializable{
 		double x2 = (x - size/2.0)/(magn/2.0);
 		double y2 = (y - size/2.0)/(magn/-2.0);
 		Node trynode = new Node(x2, y2, Street_type.lot_border);
-		
+		int qr = 0;
+		int br = 0;
+		int lr = 0;
 		Collections.shuffle(network.quarters);
 		for (Quarter q: network.quarters){
 				if(q.check_if_inside(trynode) == Street_Result.not_altered){
 					this.current_block = q;
+					qr++;
 					for(City_part block: q.contained_city_parts){
 						if(block.check_if_inside(trynode) == Street_Result.not_altered){
+							br++;
 							this.current_block = block;
 							for(City_part lot:block.contained_city_parts){
 								if(lot.check_if_inside(trynode) == Street_Result.not_altered){
+									lr++;
 									this.current_part = lot;
 								}
 									
@@ -181,7 +186,11 @@ public class Simple_paint implements Serializable{
 				}
 		}
 		if(current_block != null){
-
+			/*System.out.println(current_block.contained_city_parts.size());
+			System.out.println("Quarters "+qr);
+			System.out.println("Blocks "+br);
+			System.out.println("Lots "+lr);
+			System.out.println();*/
 		}
 		return this.current_block;
 		

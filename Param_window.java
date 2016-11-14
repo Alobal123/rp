@@ -40,6 +40,7 @@ public class Param_window extends JDialog {
 	private JTextField textField_11;
 	private JTextField textField_12;
 	private JTextField textField_13;
+	private JTextField textField_14;
 	
 
 	/**
@@ -189,6 +190,37 @@ public class Param_window extends JDialog {
 			});
 			
 			contentPanel.add(textField_3);
+		}
+		{
+			JLabel lblWidthOfStreets = new JLabel("Width of streets");
+			contentPanel.add(lblWidthOfStreets);
+		}
+		{
+			textField_14 = new JTextField();
+			textField_14.setText(Double.toString(settings.street_width));
+			textField_14.setColumns(10);
+			textField_14.getDocument().addDocumentListener(new DocumentListener() {
+				  public void changedUpdate(DocumentEvent e) {
+					  update();
+				  }
+				  public void removeUpdate(DocumentEvent e) {
+					  update();
+				  }
+				  public void insertUpdate(DocumentEvent e) {
+					  update();
+				  }
+				  private void update(){
+					  try{
+						  double n = Double.parseDouble(textField_14.getText());
+						  settings.street_width = n;
+					  }
+					  catch(NumberFormatException e){
+						  
+					  }
+				  }
+				   
+			});
+			contentPanel.add(textField_14);
 		}
 		{
 			JLabel lblNewLabel_3 = new JLabel("Allowed distance of streets");

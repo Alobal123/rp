@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -109,6 +110,85 @@ public class Node_Distance implements Serializable{
 	}
 	
 	
+	
+	
+	public ArrayList<Street> get_Path_Astar(Node start, Node goal){
+		
+		class AComparator implements Comparator<Node>{
+			HashMap<Node, Double> gscore;
+			HashMap<Node, Double> fscore;
+			public AComparator(HashMap<Node, Double> gscore,HashMap<Node, Double> fscore){
+				this.gscore = gscore;
+				this.fscore = fscore;
+			}
+			@Override
+			public int compare(Node o1, Node o2) {
+				return Double.compare(gscore.get(o1)+fscore.get(o1),gscore.get(o2)+fscore.get(o2));
+			}
+		}
+		
+		HashMap<Node, Node> previous = new HashMap<>();
+		HashMap<Node, Double> gscore = new HashMap<>();
+		HashMap<Node, Double> fscore = new HashMap<>();
+		
+		AComparator comparator = new AComparator(gscore, fscore);
+		
+		HashSet<Node> closed = new HashSet<>();
+		for (Node node : network.nodes) {
+			gscore.put(node, Double.MAX_VALUE);
+			fscore.put(node, Double.MAX_VALUE);
+		}
+		gscore.put(start, 0.0);
+		fscore.put(start, Point.dist(start.point, goal.point));
+		
+		PriorityQueue<Node> queue = new PriorityQueue<>(comparator);
+		queue.add(start);
+		big: while(!queue.isEmpty()){
+			Node current = queue.poll();
+			if(current == goal){
+				break big;
+			}
+			closed.add(current);
+			for(Street s: current.streets){
+				if((s.major==Street_type.major && s.traffic < network.settings.major_street_capacity)||
+					s.traffic < network.settings.minor_street_capacity){
+					Node neighbour = s.other_node(current);
+					double tentative_gScore = gscore.get(current) + s.length;
+					if(closed.contains(neighbour))
+						continue;
+					if(tentative_gScore < gscore.get(neighbour)){
+						gscore.put(neighbour, tentative_gScore);
+						fscore.put(neighbour, Point.dist(neighbour.point, goal.point));
+						previous.put(neighbour, current);
+	                    if (!queue.contains(neighbour)) {
+	                        queue.add(neighbour);
+	                    }
+					}
+				
+				}
+			}
+			
+		}
+		return reconstruct_path(goal, previous);
+
+	}
+	
+	private ArrayList<Street> reconstruct_path(Node goal, HashMap<Node, Node> previous) {
+		ArrayList<Street> path =  new ArrayList<>();
+		Node u = goal;
+		while(previous.containsKey(u)){
+			for(Street s: u.streets){
+				if(s.other_node(u) == previous.get(u)){
+					path.add(s);
+					break;
+				}
+			}
+			u = previous.get(u);
+		}
+		
+		return path;
+	}
+
 	public ArrayList<Street> get_path_dijkstra(Node n1, Node n2){
 		
 		HashMap<Node, Node> previous = new HashMap<>();
@@ -125,6 +205,7 @@ public class Node_Distance implements Serializable{
 			
 		});
 		queue.addAll(network.nodes);
+		
 		big: while(!queue.isEmpty()){
 			Node node1 = queue.poll();
 			for(Street s: node1.streets){
@@ -144,19 +225,8 @@ public class Node_Distance implements Serializable{
 			}
 			}
 		}
-		ArrayList<Street> path =  new ArrayList<>();
-		Node u = n2;
-		while(previous.containsKey(u)){
-			for(Street s: u.streets){
-				if(s.other_node(u) == previous.get(u)){
-					path.add(s);
-					break;
-				}
-			}
-			u = previous.get(u);
-		}
 		
-		return path;
+		return reconstruct_path(n2, previous);
 		
 	}
 	

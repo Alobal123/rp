@@ -11,16 +11,16 @@ public class Settings implements Serializable{
 	Double focus_constant = 2.0;
 	
 	/** Maximální délka hlavní ulice. */
-	Double major_max_length = 0.5;
+	Double major_max_length = 0.6;
 	
 	/** Minimálná délka hlavní ulice. */
-	Double major_min_length = 0.3;
+	Double major_min_length = 0.4;
 	
 	/** Maximální délka vedlejší ulice */
-	Double minor_max_length = 0.2;
+	Double minor_max_length = 0.3;
 	
 	/** Minimální délka vedlejší ulice */
-	Double minor_min_length = 0.1;
+	Double minor_min_length = 0.2;
 	
 	/** Urèuje, jak blízko mùže být hlavní uzel nìjakému jinému uzlu. */
 	Double major_close_node_constant = 0.03;
@@ -59,7 +59,7 @@ public class Settings implements Serializable{
 	Double minor_street_capacity = 20.0;
 	
 	/**Šíøka ulice. */
-	Double street_width = 0.005;
+	Double street_width = 0.015;
 	
 	Double global_weight = 0.5;
 	

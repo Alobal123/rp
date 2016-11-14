@@ -5,7 +5,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO: Auto-generated Javadoc
 /**
  * Zkratka za Land Use Type. Reprezentuje vyuití nìjaké èásti mìsta. 
  * Podle vyuití se pak urèuje hodnota a také jaké pozemky a budovy se zde budopu vyskytovat.
@@ -46,6 +45,8 @@ public class Lut implements Serializable{
 	
 	Color color;
 	
+	Settings settings;
+	
 	/**
 	 * Konstruktor
 	 *
@@ -54,13 +55,12 @@ public class Lut implements Serializable{
 	 * @param percentage the percentage
 	 * @param color the color
 	 */
-	public Lut (String name, double residents,double percentage,Color color){
+	public Lut (String name, double residents,double percentage,Color color,Settings settings){
 		this.name = name;
 		this.residents = residents;
 		this.color = color;
 		this.wanted_percentage = percentage;
-		
-		//buildings.add(default_building);
+		this.settings = settings;
 	}
 	
 	/**
@@ -78,16 +78,15 @@ public class Lut implements Serializable{
 		double min_area = 0;
 		
 		for(Building b: buildings){
-			
-			if(b.area > min_area){
-					
+			if(b.area > min_area){	
 				min_area = b.area;
 			}
 		}
 			
 		if(min_area==0)
-			min_area = 0.01;	
-		this.minimal_lot_area = min_area*6;
+			min_area = 0.01;
+		min_area = Math.pow((Math.sqrt(min_area)+ settings.street_width/2),2);
+		this.minimal_lot_area = min_area*4;
 		//System.out.println(minimal_lot_area);
 	}
 	
