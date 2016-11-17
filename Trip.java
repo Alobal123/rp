@@ -9,6 +9,11 @@ import java.util.ArrayList;
  */
 public class Trip implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2612659907294785389L;
+
 	/**Startovní uzel tripu*/
 	Node start;
 	

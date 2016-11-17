@@ -1,4 +1,4 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -11,8 +11,9 @@ import java.util.ArrayList;
 import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import krabec.citysimulator.Crossroad;
 import java.awt.FlowLayout;
-import java.awt.GridBagLayout;
+
 
 public class Cross_panel extends JPanel{
 
@@ -34,7 +35,7 @@ public class Cross_panel extends JPanel{
 		JPanel panel = new JPanel();
 		add(panel, BorderLayout.EAST);
 		
-		fieldn = new JTextField(Integer.toString(crossroad.number_of_roads));
+		fieldn = new JTextField(Integer.toString(crossroad.getNumber_of_roads()));
 		fieldn.setColumns(10);
 		fieldn.setHorizontalAlignment(SwingConstants.CENTER);
 		add(fieldn, BorderLayout.WEST);

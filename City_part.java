@@ -12,6 +12,10 @@ import java.util.List;
  */
 public abstract class City_part implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7374818903326872052L;
 	/** Seznam ulic ohranièujích tuto mìstskou èást. */
 	List<Street> streets = new ArrayList<Street>();
 	List<City_part> contained_city_parts = new ArrayList<>();
@@ -20,7 +24,7 @@ public abstract class City_part implements Serializable{
 	Node firstnode;
 	
 	/** Land_use_type této èásti mìsta. */
-	Lut lut;
+	public Lut lut;
 	
 	/** Lokální hodnota této èásti mìsta. */
 	double value;
@@ -150,10 +154,10 @@ public abstract class City_part implements Serializable{
 		int n = points.size()-1;
 		for (int i=0; i<n; i++){
 			j = (i+1)%n;
-			area += points.get(i).x * points.get(j).y;
-			area -= points.get(j).x * points.get(i).y;
-			x+= points.get(i).x;
-			y+= points.get(i).y;
+			area += points.get(i).getX() * points.get(j).getY();
+			area -= points.get(j).getX() * points.get(i).getY();
+			x+= points.get(i).getX();
+			y+= points.get(i).getY();
 		}
 		
 		this.center = new Point(x/n, y/n);

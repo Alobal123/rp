@@ -3,7 +3,6 @@ package krabec.citysimulator;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -14,11 +13,16 @@ import java.util.Random;
  */
 public class City implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6617663931603831692L;
+
 	/** Seznam vöech Lut, kterÈ se majÌ ve mÏstÏ vyskytovat. */
-	ArrayList<Lut> luts = new ArrayList<>();
+	public ArrayList<Lut> luts = new ArrayList<>();
 	
 	/** Graf uchov·vajÌcÌ sÌù ulic a starajÌcÌ se o jejich r˘st. */
-	Street_Network network;
+	public Street_Network network;
 	
 	/** Instance t¯Ìdy nd se star· o hled·nÌ a uchov·v·nÌ nejkratöÌch cest. */
 	Node_Distance nd;
@@ -27,7 +31,7 @@ public class City implements Serializable{
 	double value = 0;
 	
 	Random rnd = new Random();
-	Settings settings;
+	private Settings settings;
 	
 	/**
 	 * Konstruktor
@@ -37,7 +41,7 @@ public class City implements Serializable{
 	public City (Street_Network network){
 		this.network = network;
 		this.nd = new Node_Distance(network);
-		this.settings = network.settings;
+		this.setSettings(network.settings);
 	}
 	
 	
@@ -54,7 +58,7 @@ public class City implements Serializable{
 				nodes_to_check.add(s.other_node(node));
 			}
 		}
-		int additional_nodes = (int)(network.nodes.size()*settings.traffic_resample_rate);
+		int additional_nodes = (int)(network.nodes.size()*getSettings().traffic_resample_rate);
 		for (int i = 0; i < additional_nodes; i++) {
 			int index = rnd.nextInt(additional_nodes);
 			nodes_to_check.add(network.nodes.get(index));
@@ -122,7 +126,7 @@ public class City implements Serializable{
 		private void build(){
 			for(Node node: network.nodes){
 				for (Street s: node.streets){
-					if(!s.built && s.traffic >= settings.build_cost){
+					if(!s.built && s.traffic >= getSettings().build_cost){
 						s.built = true;
 						s.node1.built = true;
 						s.node2.built = true;
@@ -155,7 +159,7 @@ public class City implements Serializable{
 					allblocks.add((Block)cp);
 				}
 			}
-			for (int i = 0; i < (int) (settings.lut_resample_rate * allblocks.size()); i++) {
+			for (int i = 0; i < (int) (getSettings().lut_resample_rate * allblocks.size()); i++) {
 				chosen.add(allblocks.get(rnd.nextInt(allblocks.size())));
 			}
 			return chosen;
@@ -169,7 +173,7 @@ public class City implements Serializable{
 		 * @return Hodnota mÏsta.
 		 */
 		private double evaluate(){
-			return (1-settings.global_weight)*local_value() + settings.global_weight*global_value();
+			return (1-getSettings().global_weight)*local_value() + getSettings().global_weight*global_value();
 		}
 		
 		/**
@@ -238,7 +242,7 @@ public class City implements Serializable{
 			if(bestlut == null){
 				for(Lut lut: luts){
 					b.lut = lut;
-					b.value = lut.evaluate(b, network, nd)-settings.lut_resample_cost;
+					b.value = lut.evaluate(b, network, nd)-getSettings().lut_resample_cost;
 					double value = evaluate();
 					if(value > max){
 						max = value;
@@ -274,7 +278,7 @@ public class City implements Serializable{
 				
 				ArrayList<Node> new_lot_borders = new ArrayList<>();
 				for(Node n: b.lot_borders){
-					Node newnode = new Node(n.point.x, n.point.y, n.major,true);
+					Node newnode = new Node(n.point.getX(), n.point.getY(), n.major,true);
 					new_lot_borders.add(newnode);
 				}
 				
@@ -296,7 +300,7 @@ public class City implements Serializable{
 				b.divide_to_convex();
 
 				for(City_part current_part: b.contained_city_parts){
-					((Lot)current_part).choose_and_place (b.lut,settings);
+					((Lot)current_part).choose_and_place (b.lut,getSettings());
 				}
 				for (Node node : b.get_nodes_once()) {
 					node.residents += b.lut.residents;
@@ -308,6 +312,17 @@ public class City implements Serializable{
 				b.lut = prevlut;
 			}
 			
+		}
+
+
+		public Settings getSettings() {
+			return settings;
+		}
+
+
+		public void setSettings(Settings settings) {
+			this.settings = settings;
+			this.network.settings = settings;
 		}
 		
 	}

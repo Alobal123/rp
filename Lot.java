@@ -9,6 +9,10 @@ import java.util.ArrayList;
  */
 public class Lot extends City_part implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6035785538595754370L;
 	/** Budova stojící na tomto pozemku. */
 	Building building;
 	
@@ -44,8 +48,8 @@ public class Lot extends City_part implements Serializable{
 		double move = Math.random();
 		move = 0.5 - move/50;
 		
-		double newx = (move*longest.node1.point.x + (1-move)*longest.node2.point.x);
-		double newy = (move*longest.node1.point.y + (1-move)*longest.node2.point.y);
+		double newx = (move*longest.node1.point.getX() + (1-move)*longest.node2.point.getX());
+		double newy = (move*longest.node1.point.getY() + (1-move)*longest.node2.point.getY());
 		Node oldnode = new Node( newx , newy, longest.major,true);
 		oldnode.angle = longest.get_absolute_angle(longest.node1);
 		
@@ -151,7 +155,7 @@ public class Lot extends City_part implements Serializable{
 		}
 		if(intersecting != null){
 			
-			Node newnode2 = new Node(intersection.x, intersection.y, intersecting.major,intersecting.built);
+			Node newnode2 = new Node(intersection.getX(), intersection.getY(), intersecting.major,intersecting.built);
 			if(this.streets.contains(intersecting)){
 				Street newstreet0 = new Street(oldnode, newnode2, Street_type.lot_border,true);
 				Street newstreet1 = new Street(longest.node1, oldnode, longest.major,true);
@@ -190,7 +194,7 @@ public class Lot extends City_part implements Serializable{
 	 * @param settings the settings
 	 */
 	public void choose_and_place(Lut lut,Settings settings) {
-		for(Building b: lut.buildings){
+		for(Building b: lut.getBuildings()){
 			
 			Building building = b.copy();
 			if(place_building(building, settings)){

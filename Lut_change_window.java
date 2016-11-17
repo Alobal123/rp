@@ -1,12 +1,14 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import krabec.citysimulator.Block;
+import krabec.citysimulator.City;
+import krabec.citysimulator.Lut;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import java.awt.Font;
@@ -18,6 +20,10 @@ import java.awt.event.WindowEvent;
 
 public class Lut_change_window extends JDialog {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 284591413770579771L;
 	private final JPanel contentPanel = new JPanel();
 	JComboBox<Lut> comboBox ;
 

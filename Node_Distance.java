@@ -11,6 +11,10 @@ import java.util.PriorityQueue;
 
 public class Node_Distance implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3185718565136028397L;
 	Street_Network network;
 	double[][] dist;
 	Integer[][] next;

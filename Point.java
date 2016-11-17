@@ -11,11 +11,16 @@ import java.util.List;
  */
 public class Point implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8151971964805701305L;
+
 	/** x-ová souøadnice bodu */
-	double x;
+	private double x;
 	
 	/** z-ová souøadnice bodu */
-	double y;
+	private double y;
 	
 	/**
 	 * Konstruktor
@@ -24,8 +29,8 @@ public class Point implements Serializable{
 	 * @param y the y
 	 */
 	public Point (double x, double y){
-		this.x=x;
-		this.y=y;
+		this.setX(x);
+		this.setY(y);
 	}
 	
 	/**
@@ -35,14 +40,14 @@ public class Point implements Serializable{
 	 * @return Rozdíl
 	 */
 	public Point minus (Point p){
-		return new Point(this.x - p.x,this.y - p.y);
+		return new Point(this.getX() - p.getX(),this.getY() - p.getY());
 	}
 	public Point plus (Point p){
-		return new Point(this.x + p.x,this.y + p.y);
+		return new Point(this.getX() + p.getX(),this.getY() + p.getY());
 	}
 	
 	public static double dot(Point p1,Point p2){
-		return p1.x*p2.x + p1.y*p2.y;
+		return p1.getX()*p2.getX() + p1.getY()*p2.getY();
 	}
 	
 	/**
@@ -54,14 +59,14 @@ public class Point implements Serializable{
 	 */
 	public static double angleBetween(Point point1, Point point2)
 	{
-	    double sin = point1.x * point2.y - point2.x * point1.y;  
-	    double cos = point1.x * point2.x + point1.y * point2.y;
+	    double sin = point1.getX() * point2.getY() - point2.getX() * point1.getY();  
+	    double cos = point1.getX() * point2.getX() + point1.getY() * point2.getY();
 
 	    return Math.atan2(sin, cos) * (180 / Math.PI);
 	}
 	
 	public double norm(){
-		return Math.sqrt(x*x+y*y);
+		return Math.sqrt(getX()*getX()+getY()*getY());
 	}
 	
 	/**
@@ -73,7 +78,7 @@ public class Point implements Serializable{
 	 */
 	static double dist(Point a, Point b){
 		
-		return (Math.sqrt(Math.pow((a.x-b.x),2) + Math.pow((a.y-b.y),2)));
+		return (Math.sqrt(Math.pow((a.getX()-b.getX()),2) + Math.pow((a.getY()-b.getY()),2)));
 	}
 	
 	
@@ -108,8 +113,8 @@ public class Point implements Serializable{
 	
 	@Override
 	public String toString(){
-		double rx = round(x,3);
-		double ry = round(y,3);
+		double rx = round(getX(),3);
+		double ry = round(getY(),3);
 		return "(" + rx + " , " + ry + ")";
 	}
 	
@@ -119,6 +124,22 @@ public class Point implements Serializable{
 	    BigDecimal bd = new BigDecimal(value);
 	    bd = bd.setScale(places, RoundingMode.HALF_UP);
 	    return bd.doubleValue();
+	}
+
+	public double getY() {
+		return y;
+	}
+
+	public void setY(double y) {
+		this.y = y;
+	}
+
+	public double getX() {
+		return x;
+	}
+
+	public void setX(double x) {
+		this.x = x;
 	}
 
 	

@@ -1,4 +1,4 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -9,6 +9,11 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import krabec.citysimulator.Lut;
+import krabec.citysimulator.Mapping;
+import krabec.citysimulator.Valuation;
+import krabec.citysimulator.Valuation_Types;
+
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -18,6 +23,11 @@ import javax.swing.JComboBox;
 import javax.swing.JTextField;
 
 public class Val_Edit extends JDialog {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5020915200909463364L;
 
 	private final JPanel contentPanel = new JPanel();
 
@@ -53,14 +63,14 @@ public class Val_Edit extends JDialog {
 			for(Valuation_Types valtype: Valuation_Types.values()){
 				comboBox.addItem(valtype);
 			}
-			comboBox.setSelectedItem(val.type);
+			comboBox.setSelectedItem(val.getType());
 			comboBox.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					val.type = (Valuation_Types) comboBox.getSelectedItem();
-					if(val.type == Valuation_Types.influence)
+					val.setType((Valuation_Types) comboBox.getSelectedItem());
+					if(val.getType() == Valuation_Types.influence)
 						influencing.setEnabled(true);
-					else if(val.type == Valuation_Types.clustering){
+					else if(val.getType() == Valuation_Types.clustering){
 						influencing.setSelectedItem(parent.parent.lut);
 						influencing.setEnabled(false);
 					}
@@ -80,18 +90,18 @@ public class Val_Edit extends JDialog {
 		}
 		{
 			JComboBox<Lut> comboBox2 = new JComboBox<>();
-			if(val.type != Valuation_Types.influence)
+			if(val.getType() != Valuation_Types.influence)
 				comboBox2.setEnabled(false);
 			influencing = comboBox2;
 			for(Lut lut: parent.parent.parent.parent.load_luts()){
 				comboBox2.addItem(lut);
 			}
-			influencing.setSelectedItem(val.influencing_lut);
+			influencing.setSelectedItem(val.getInfluencing_lut());
 			comboBox2.addActionListener(new ActionListener() {
 				
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					val.influencing_lut = (Lut) comboBox2.getSelectedItem();
+					val.setInfluencing_lut((Lut) comboBox2.getSelectedItem());
 					
 				}
 			});
@@ -106,12 +116,12 @@ public class Val_Edit extends JDialog {
 			JComboBox<Mapping> comboBox3 = new JComboBox<>();
 			for(Mapping m : Mapping.values())
 				comboBox3.addItem(m);
-			comboBox3.setSelectedItem(val.mapping);
+			comboBox3.setSelectedItem(val.getMapping());
 			comboBox3.addActionListener(new ActionListener() {
 				
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					val.mapping = (Mapping) comboBox3.getSelectedItem();
+					val.setMapping((Mapping) comboBox3.getSelectedItem());
 					
 				}
 			});
@@ -126,7 +136,7 @@ public class Val_Edit extends JDialog {
 			textField = new JTextField();
 			contentPanel.add(textField);
 			textField.setColumns(10);
-			textField.setText(Double.toString(val.min));
+			textField.setText(Double.toString(val.getMin()));
 			textField.getDocument().addDocumentListener(new DocumentListener() {
 				  public void changedUpdate(DocumentEvent e) {
 					  update_weight();
@@ -140,7 +150,7 @@ public class Val_Edit extends JDialog {
 				  private void update_weight(){
 					  try{
 						  double n = Double.parseDouble(textField.getText());
-						  val.min = n;
+						  val.setMin(n);
 					  }
 					  catch(NumberFormatException e){
 						  
@@ -158,7 +168,7 @@ public class Val_Edit extends JDialog {
 			textField_1 = new JTextField();
 			contentPanel.add(textField_1);
 			textField_1.setColumns(10);
-			textField_1.setText(Double.toString(val.max));
+			textField_1.setText(Double.toString(val.getMax()));
 			textField_1.getDocument().addDocumentListener(new DocumentListener() {
 				  public void changedUpdate(DocumentEvent e) {
 					  update_weight();
@@ -172,7 +182,7 @@ public class Val_Edit extends JDialog {
 				  private void update_weight(){
 					  try{
 						  double n = Double.parseDouble(textField_1.getText());
-						  val.max = n;
+						  val.setMax(n);
 					  }
 					  catch(NumberFormatException e){
 						  
@@ -190,8 +200,8 @@ public class Val_Edit extends JDialog {
 				okButton.setActionCommand("OK");
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
-						parent.type_label.setText(val.type.toString());
-						parent.type_label2.setText(val.mapping.toString());
+						parent.type_label.setText(val.getType().toString());
+						parent.type_label2.setText(val.getMapping().toString());
 						parent.updateUI();
 						
 						thiswindow.dispose();

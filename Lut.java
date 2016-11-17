@@ -27,23 +27,23 @@ public class Lut implements Serializable{
 	}
 	
 	/** Jméno */
-	String name;
+	private String name;
 	
 	/** Poèet obyvatel na jeden uzel */
-	double residents;
+	public double residents;
 	
 	double minimal_lot_area = 0.01;
 	
 	/** Udává jaký podíl má být ve mìstì zabrán tímto typem využití. */
-	double wanted_percentage;
+	public double wanted_percentage;
 	
 	/** Seznam ohodnocení. */
-	List<Valuation> valuations = new ArrayList<>();
+	public List<Valuation> valuations = new ArrayList<>();
 	
 	/** Seznam budov. */
-	List<Building> buildings = new ArrayList<>();
+	private List<Building> buildings = new ArrayList<>();
 	
-	Color color;
+	public Color color;
 	
 	Settings settings;
 	
@@ -56,7 +56,7 @@ public class Lut implements Serializable{
 	 * @param color the color
 	 */
 	public Lut (String name, double residents,double percentage,Color color,Settings settings){
-		this.name = name;
+		this.setName(name);
 		this.residents = residents;
 		this.color = color;
 		this.wanted_percentage = percentage;
@@ -70,16 +70,16 @@ public class Lut implements Serializable{
 	 */
 	public void add_val(Valuation val){
 		this.valuations.add(val);
-		if(val.type == Valuation_Types.clustering)
-			val.influencing_lut = this;
+		if(val.getType() == Valuation_Types.clustering)
+			val.setInfluencing_lut(this);
 	}
 	
 	public void find_min_area(){
 		double min_area = 0;
 		
-		for(Building b: buildings){
-			if(b.area > min_area){	
-				min_area = b.area;
+		for(Building b: getBuildings()){
+			if(b.getArea() > min_area){	
+				min_area = b.getArea();
 			}
 		}
 			
@@ -87,7 +87,6 @@ public class Lut implements Serializable{
 			min_area = 0.01;
 		min_area = Math.pow((Math.sqrt(min_area)+ settings.street_width/2),2);
 		this.minimal_lot_area = min_area*4;
-		//System.out.println(minimal_lot_area);
 	}
 	
 	/**
@@ -101,14 +100,30 @@ public class Lut implements Serializable{
 	public double evaluate(Block block,Street_Network network, Node_Distance nd){
 		double sum = 0;
 		for(Valuation val: valuations){
-			sum += val.get_value(network, block, nd) * val.weight;
+			sum += val.get_value(network, block, nd) * val.getWeight();
 		}
 		block.value = sum;
 		return sum;
 	}
 	@Override
 	public String toString(){
+		return getName();
+	}
+
+	public String getName() {
 		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public List<Building> getBuildings() {
+		return buildings;
+	}
+
+	public void setBuildings(List<Building> buildings) {
+		this.buildings = buildings;
 	}
 	
 	

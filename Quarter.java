@@ -10,6 +10,10 @@ import java.util.List;
  */
 public class Quarter extends City_part implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5973932903980349268L;
 	/** The blocks. */
 	List<Block> blocks = new ArrayList<>();
 	int number;

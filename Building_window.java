@@ -1,23 +1,27 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashSet;
-
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import krabec.citysimulator.Building;
+import krabec.citysimulator.Lut;
+
 import java.awt.GridLayout;
 
 public class Building_window extends JDialog {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8514822025514752082L;
 	private JPanel contentPane;
 	ArrayList<Lut> luts;
 
@@ -41,7 +45,7 @@ public class Building_window extends JDialog {
 		
 		HashSet<Building> buildings =  new HashSet<>();
 		for(Lut lut: luts){
-			buildings.addAll(lut.buildings);
+			buildings.addAll(lut.getBuildings());
 		}
 		for(Building b: buildings){
 			panel.add(new Building_panel(b, luts));
@@ -69,6 +73,9 @@ public class Building_window extends JDialog {
 				buttonPane.add(okButton);
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
+						for(Lut lut: luts){
+							lut.find_min_area();
+						}
 						thiswindow.dispose();
 					}
 				});

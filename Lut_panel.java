@@ -1,4 +1,4 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import javax.swing.JPanel;
 import javax.swing.JLabel;
@@ -15,6 +15,9 @@ import java.awt.BorderLayout;
 import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+
+import krabec.citysimulator.Lut;
+
 import javax.swing.JTextField;
 
 public class Lut_panel extends JPanel {
@@ -47,7 +50,7 @@ public class Lut_panel extends JPanel {
 		btnNewButton.setBackground(lut.color);
 		add(btnNewButton, BorderLayout.WEST);
 		
-		namelabel = new JLabel(" "+lut.name);
+		namelabel = new JLabel(" "+lut.getName());
 		namelabel.setHorizontalAlignment(SwingConstants.CENTER);
 		add(namelabel, BorderLayout.CENTER);
 		

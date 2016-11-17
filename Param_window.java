@@ -1,29 +1,30 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-
+import krabec.citysimulator.Settings;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import java.awt.Font;
 import javax.swing.JSlider;
-import javax.swing.SwingConstants;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 
 public class Param_window extends JDialog {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 741820597382211777L;
 	Settings settings;
 	private final JPanel contentPanel = new JPanel();
 	private JTextField textField;

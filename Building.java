@@ -8,8 +8,13 @@ import java.util.ArrayList;
  */
 public class Building implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7358710944312026111L;
+
 	/** Body, kterými je budova tvoøena. Udává pouze tvar budovy. */
-	final ArrayList<Point> points;
+	public final ArrayList<Point> points;
 	
 	/** Absolutní umístìní budovy v rovinì.*/
 	ArrayList<Point> placement;
@@ -18,13 +23,10 @@ public class Building implements Serializable{
 	ArrayList<Street> borders;
 	
 	/** Jméno budovy. */
-	String name;
+	private String name;
 	
 	/** Bod uprostøed budovy. */
 	Point center;
-	
-	/**Plocha budovy*/
-	double area;
 	
 	double angle = 0;
 	
@@ -35,10 +37,9 @@ public class Building implements Serializable{
 	 * @param name jméno budovy
 	 */
 	public Building (ArrayList<Point> points,String name){
-		this.name = name;
+		this.setName(name);
 		this.points = points;
 		place(new Point(0, 0));
-		find_area();
 	}
 	
 	/**
@@ -51,9 +52,8 @@ public class Building implements Serializable{
 		points.add(new Point(0.05, 0.05));
 		points.add(new Point(0.05, 0));
 		this.points = points;
-		this.name = "New Building";
+		this.setName("New Building");
 		place(new Point(0, 0));
-		find_area();
 	}
 
 	/**
@@ -61,10 +61,10 @@ public class Building implements Serializable{
 	 */
 	private void create_borders(){
 		borders = new ArrayList<>();
-		Node first =  new Node(placement.get(0).x, placement.get(0).y, Street_type.lot_border);
+		Node first =  new Node(placement.get(0).getX(), placement.get(0).getY(), Street_type.lot_border);
 		Node prev = first;
 		for (int i = 1; i < points.size(); i++) {
-			Node newnode =  new Node(placement.get(i).x, placement.get(i).y, Street_type.lot_border);
+			Node newnode =  new Node(placement.get(i).getX(), placement.get(i).getY(), Street_type.lot_border);
 			borders.add(new Street(prev, newnode, Street_type.lot_border));
 			prev = newnode;
 		}
@@ -72,8 +72,8 @@ public class Building implements Serializable{
 		double x = 0;
 		double y = 0;
 		for (int i=0; i<placement.size(); i++){
-			x+= placement.get(i).x;
-			y+= placement.get(i).y;
+			x+= placement.get(i).getX();
+			y+= placement.get(i).getY();
 		}
 		this.center = new Point(x/placement.size(), y/placement.size());
 	}
@@ -86,7 +86,7 @@ public class Building implements Serializable{
 	public void place (Point point){
 		placement =  new ArrayList<>();
 		for(Point p: points){
-			placement.add(new Point(p.x+point.x, p.y + point.y));
+			placement.add(new Point(p.getX()+point.getX(), p.getY() + point.getY()));
 		}
 		create_borders();
 	}
@@ -115,15 +115,8 @@ public class Building implements Serializable{
 	{
 		angle = angle*Math.PI/180;
 		Point translated = point.minus(origin);
-		Point rotated = new Point(translated.x * Math.cos(angle) - translated.y * Math.sin(angle), translated.x * Math.sin(angle) + translated.y * Math.cos(angle));
+		Point rotated = new Point(translated.getX() * Math.cos(angle) - translated.getY() * Math.sin(angle), translated.getX() * Math.sin(angle) + translated.getY() * Math.cos(angle));
 		return rotated.plus(origin);
-	}
-	
-	/**
-	 * Vypoèítá plochu budovy.
-	 */
-	public void find_area(){
-		this.area =  get_front_length()*get_side_length();
 	}
 	
 	
@@ -147,10 +140,10 @@ public class Building implements Serializable{
 		double ratio1 = (street.length/2 - small.length/2)/street.length;	
 		double ratio2 = (street.length/2 + small.length/2)/street.length;
 		if(node1){
-			place(new Point(ratio1*street.node1.point.x + ratio2*street.node2.point.x, ratio1*street.node1.point.y + ratio2*street.node2.point.y));
+			place(new Point(ratio1*street.node1.point.getX() + ratio2*street.node2.point.getX(), ratio1*street.node1.point.getY() + ratio2*street.node2.point.getY()));
 		}
 		else{
-			place(new Point(ratio2*street.node1.point.x + ratio1*street.node2.point.x, ratio2*street.node1.point.y + ratio1*street.node2.point.y));
+			place(new Point(ratio2*street.node1.point.getX() + ratio1*street.node2.point.getX(), ratio2*street.node1.point.getY() + ratio1*street.node2.point.getY()));
 		}
 		small = borders.get(0);
 		if(rotation){
@@ -192,7 +185,7 @@ public class Building implements Serializable{
 	 */
 	private boolean control(City_part cp,Street s,boolean node1){
 		boolean succes = false;
-		if(cp.check_if_inside(new Node(center.x,center.y,null)) == Street_Result.not_altered){
+		if(cp.check_if_inside(new Node(center.getX(),center.getY(),null)) == Street_Result.not_altered){
 			succes = true;
 		}
 		if(succes){
@@ -220,12 +213,12 @@ public class Building implements Serializable{
 		double minus_one = 1;
 		if(minus)
 			minus_one = -1;
-		Point vector = new Point(street.node1.point.x - street.node2.point.x, street.node1.point.y - street.node2.point.y);
-		vector = new Point(minus_one*dist*-1*vector.y/vector.norm(), dist*minus_one*vector.x/vector.norm());
+		Point vector = new Point(street.node1.point.getX() - street.node2.point.getX(), street.node1.point.getY() - street.node2.point.getY());
+		vector = new Point(minus_one*dist*-1*vector.getY()/vector.norm(), dist*minus_one*vector.getX()/vector.norm());
 		//System.out.println(vector);
 		for(Point p: placement){
-			p.x+= vector.x;
-			p.y+= vector.y;
+			p.setX(p.getX() + vector.getX());
+			p.setY(p.getY() + vector.getY());
 		}
 		create_borders();
 	}
@@ -236,7 +229,7 @@ public class Building implements Serializable{
 	 * @return the building
 	 */
 	public Building copy(){
-		return new Building(points,name);
+		return new Building(points,getName());
 	}
 	
 	/**
@@ -259,8 +252,19 @@ public class Building implements Serializable{
 	
 	@Override
 	public String toString(){
-		return name + " " + points.get(0) + " " + points.get(1);
+		return getName() + " " + points.get(0) + " " + points.get(1);
 		
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+	public double getArea(){
+		return get_front_length()*get_side_length();
 	}
 
 	

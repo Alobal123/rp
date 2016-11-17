@@ -12,6 +12,11 @@ public class Street implements Serializable
 	
 */
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8640165666271756086L;
+
 	/** První uzel ze kterého ulice vychází. */
 	Node node1;
 	
@@ -130,14 +135,14 @@ public class Street implements Serializable
 	 */
 	static Point getIntersection(Street s1,Street s2){
 		double i_x,i_y;
-		double p0_x =  s1.node2.point.x;
-		double p0_y =  s1.node2.point.y;
-		double p1_x =  s1.node1.point.x;
-		double p1_y =  s1.node1.point.y;
-		double p2_x =  s2.node2.point.x;
-		double p2_y =  s2.node2.point.y;
-		double p3_x =  s2.node1.point.x;
-		double p3_y =  s2.node1.point.y;
+		double p0_x =  s1.node2.point.getX();
+		double p0_y =  s1.node2.point.getY();
+		double p1_x =  s1.node1.point.getX();
+		double p1_y =  s1.node1.point.getY();
+		double p2_x =  s2.node2.point.getX();
+		double p2_y =  s2.node2.point.getY();
+		double p3_x =  s2.node1.point.getX();
+		double p3_y =  s2.node1.point.getY();
 		double s1_x, s1_y, s2_x, s2_y;
 		s1_x = p1_x - p0_x;
 		s1_y = p1_y - p0_y;

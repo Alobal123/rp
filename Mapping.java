@@ -2,7 +2,6 @@ package krabec.citysimulator;
 
 import java.io.Serializable;
 
-// TODO: Auto-generated Javadoc
 /**
  * Mapuje hodnotu do intervalu [0,1]. 
  */

@@ -1,4 +1,4 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import javax.swing.JPanel;
 
@@ -7,6 +7,9 @@ import java.awt.GridLayout;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+
+import krabec.citysimulator.Valuation;
+
 import javax.swing.JLabel;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
@@ -31,17 +34,17 @@ public class Val_panel extends JPanel {
 		
 		type_label = new JLabel();
 		add(type_label);
-		type_label.setText(valuation.type.toString());
+		type_label.setText(valuation.getType().toString());
 		
 		JLabel mapping_label = new JLabel();
 		type_label2 = mapping_label;
 		add(mapping_label);
-		mapping_label.setText(valuation.mapping.toString());
+		mapping_label.setText(valuation.getMapping().toString());
 		
 		weight_field = new JTextField();
 		add(weight_field);
 		weight_field.setColumns(10);
-		weight_field.setText(Float.toString(valuation.weight));
+		weight_field.setText(Float.toString(valuation.getWeight()));
 		weight_field.getDocument().addDocumentListener(new DocumentListener() {
 			  public void changedUpdate(DocumentEvent e) {
 				  update_weight();
@@ -55,7 +58,7 @@ public class Val_panel extends JPanel {
 			  private void update_weight(){
 				  try{
 					  float n = Float.parseFloat(weight_field.getText());
-					  valuation.weight = n;
+					  valuation.setWeight(n);
 				  }
 				  catch(NumberFormatException e){
 					  

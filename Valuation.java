@@ -9,23 +9,28 @@ import java.util.ArrayList;
  */
 public class Valuation implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7654011403473672612L;
+
 	/** Váha s jakou se zapoèítává tato hodnota do celkové hodnoty pozemku. */
-	float weight;
+	private float weight;
 	
 	/** Typ ohodnocení */
-	Valuation_Types type;
+	private Valuation_Types type;
 	
 	/** S blízkostí jakého lutu se poèítá pøi ohodnocovaní tohoto bloku*/
-	Lut influencing_lut;
+	private Lut influencing_lut;
 	
 	/** Jak se mapuje hodnota do intervalu [0,1] */
-	Mapping mapping;
+	private Mapping mapping;
 	
 	/** Jaká je být minimální hodnota v mapování. */
-	double min = 0;
+	private double min = 0;
 	
 	/** Jaká je být maximální hodnota v mapování. */
-	double max = 1;
+	private double max = 1;
 	
 	/**
 	 * Konstruktor
@@ -37,11 +42,11 @@ public class Valuation implements Serializable{
 	 * @param max the max
 	 */
 	public Valuation(float weight, Valuation_Types type,Mapping mapping,double min, double max){
-		this.weight = weight;
-		this.type = type;
-		this.mapping = mapping;
-		this.min = min;
-		this.max = max;
+		this.setWeight(weight);
+		this.setType(type);
+		this.setMapping(mapping);
+		this.setMin(min);
+		this.setMax(max);
 	}
 	
 	/**
@@ -55,12 +60,12 @@ public class Valuation implements Serializable{
 	 * @param max the max
 	 */
 	public Valuation(float weight, Valuation_Types type,Lut influencing_lut,Mapping mapping,double min, double max){
-		this.weight = weight;
-		this.type = type;
-		this.influencing_lut = influencing_lut;
-		this.mapping = mapping;
-		this.min = min;
-		this.max = max;
+		this.setWeight(weight);
+		this.setType(type);
+		this.setInfluencing_lut(influencing_lut);
+		this.setMapping(mapping);
+		this.setMin(min);
+		this.setMax(max);
 	}
 	
 	/**
@@ -72,7 +77,7 @@ public class Valuation implements Serializable{
 	 * @return Hodnota
 	 */
 	public double get_value(Street_Network network, Block block, Node_Distance nd){
-		return Mapping.map(get_non_mapped_value(network, block, nd), min, max, mapping);
+		return Mapping.map(get_non_mapped_value(network, block, nd), getMin(), getMax(), getMapping());
 	}
 	
 	/**
@@ -84,13 +89,13 @@ public class Valuation implements Serializable{
 	 * @return Hodnota
 	 */
 	private double get_non_mapped_value(Street_Network network, Block block, Node_Distance nd){
-		switch (type){
+		switch (getType()){
 		case clustering:
 			ArrayList<Block> blocks = network.get_nearest_blocks(12, block);
 			int same = 0;
 			int different = 0;
 			for(Block b: blocks){
-					if(b.built && b.lut == influencing_lut)
+					if(b.built && b.lut == getInfluencing_lut())
 						same++;
 					else
 						different++;
@@ -109,7 +114,7 @@ public class Valuation implements Serializable{
 			for(Block b: blocks){
 				if(b.built){
 					double dist = Point.dist(b.center, block.center)*b.area/radius;
-					if(b.lut == influencing_lut)
+					if(b.lut == getInfluencing_lut())
 						influencing += dist;
 					sum+=dist;
 				}
@@ -129,7 +134,7 @@ public class Valuation implements Serializable{
 		case citycenter:
 			return Point.get_smallest_distance(block.center, network.citycenters);
 		case constant:
-			return min;
+			return getMin();
 		
 		default:
 			break;
@@ -137,6 +142,54 @@ public class Valuation implements Serializable{
 		
 		
 		return 0;
+	}
+
+	public Lut getInfluencing_lut() {
+		return influencing_lut;
+	}
+
+	public void setInfluencing_lut(Lut influencing_lut) {
+		this.influencing_lut = influencing_lut;
+	}
+
+	public Valuation_Types getType() {
+		return type;
+	}
+
+	public void setType(Valuation_Types type) {
+		this.type = type;
+	}
+
+	public Mapping getMapping() {
+		return mapping;
+	}
+
+	public void setMapping(Mapping mapping) {
+		this.mapping = mapping;
+	}
+
+	public double getMin() {
+		return min;
+	}
+
+	public void setMin(double min) {
+		this.min = min;
+	}
+
+	public double getMax() {
+		return max;
+	}
+
+	public void setMax(double max) {
+		this.max = max;
+	}
+
+	public float getWeight() {
+		return weight;
+	}
+
+	public void setWeight(float weight) {
+		this.weight = weight;
 	}
 	
 	

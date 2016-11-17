@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import krabec.citysimulator.Node.NodeComparator;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -13,18 +12,22 @@ import krabec.citysimulator.Node.NodeComparator;
  */
 public class Crossroad implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5891528450453833224L;
 	/** Poèet ulic vycházejících z této køižovatky. */
-	int number_of_roads;
+	private int number_of_roads;
 	/**
 	 * Seznam všech køižovatek, které mohou vzniknout z této køižovatky pøidáním jedné ulice.
 	 */
-	List<Crossroad> viable_crossroads = new ArrayList<>();
+	public List<Crossroad> viable_crossroads = new ArrayList<>();
 	
 	
 	/**
 	 * Seznam úhlù mezi ulicemi, zadaný ve stupních a seøazených ve smìru hodinových ruèièek.
 	 */
-	List<Double> angles;
+	public List<Double> angles = new ArrayList<>();
 	
 	
 	/**
@@ -37,7 +40,12 @@ public class Crossroad implements Serializable {
 		this.number_of_roads = number_of_roads;
 		this.angles = angles;
 	}
-	
+	public Crossroad(double ... angles){
+		this.number_of_roads = angles.length;
+		for (int i = 0; i < angles.length; i++) {
+			this.angles.add(angles[i]);
+		}
+	}
 	/**
 	 * Najde všechny køižovatky, které mohou vzniknout z této køižovatky pøidáním jedné ulice.
 	 * Dosadí výsledek do pøíslušného atributy.
@@ -49,11 +57,11 @@ public class Crossroad implements Serializable {
 		
 		for(Crossroad c : all_crossroads){
 			
-			if (c.number_of_roads == this.number_of_roads + 1){
+			if (c.getNumber_of_roads() == this.getNumber_of_roads() + 1){
 					int jump = 0;
 					int matching_angles = 0;
-					for (int i = 0; i < c.number_of_roads ; i++) {
-						if(this.angles.get((i) % this.number_of_roads).equals(c.angles.get((i + jump) % c.number_of_roads))){
+					for (int i = 0; i < c.getNumber_of_roads() ; i++) {
+						if(this.angles.get((i) % this.getNumber_of_roads()).equals(c.angles.get((i + jump) % c.getNumber_of_roads()))){
 							matching_angles++;
 						}
 						else{
@@ -62,7 +70,7 @@ public class Crossroad implements Serializable {
 							else
 								matching_angles = -100;
 						}
-						if (matching_angles == this.number_of_roads - 1) {
+						if (matching_angles == this.getNumber_of_roads() - 1) {
 							viable_crossroads.add(c);
 							break;
 						}
@@ -83,9 +91,9 @@ public class Crossroad implements Serializable {
 		
 		double sum = 0;
 		Crossroad c = viable_crossroads.get(a);	
-		for (int i = 0; i < this.number_of_roads; i++) {
-			sum += c.angles.get((i) % c.number_of_roads);
-			if(!this.angles.get((i ) % this.number_of_roads).equals(c.angles.get((i) % c.number_of_roads))){
+		for (int i = 0; i < this.getNumber_of_roads(); i++) {
+			sum += c.angles.get((i) % c.getNumber_of_roads());
+			if(!this.angles.get((i ) % this.getNumber_of_roads()).equals(c.angles.get((i) % c.getNumber_of_roads()))){
 				break;
 			}
 		}
@@ -110,14 +118,14 @@ public class Crossroad implements Serializable {
 	public boolean equals(Object o){
 		if(o instanceof Crossroad){
 			Crossroad c = (Crossroad) o;
-			if (c.number_of_roads == this.number_of_roads) {
+			if (c.getNumber_of_roads() == this.getNumber_of_roads()) {
 					int same_angles = 0;
-					for (int j = 0; j < c.number_of_roads; j++) {
-						if(Math.abs( c.angles.get((j) % c.number_of_roads) - this.angles.get(j)) < 0.000001){ //TODO nastavit spravnou konstantu
+					for (int j = 0; j < c.getNumber_of_roads(); j++) {
+						if(Math.abs( c.angles.get((j) % c.getNumber_of_roads()) - this.angles.get(j)) < 0.000001){ //TODO nastavit spravnou konstantu
 							same_angles++;
 						}
 					}
-					if(same_angles == number_of_roads)
+					if(same_angles == getNumber_of_roads())
 						return true;
 					
 				
@@ -145,11 +153,11 @@ public class Crossroad implements Serializable {
 			return rt;
 		}
 		
-		for (int i = 0; i < number_of_roads; i++) {
+		for (int i = 0; i < getNumber_of_roads(); i++) {
 			Collections.rotate(this.angles, 1);
 			ArrayList<Double> new_angles = new ArrayList<>();
 			new_angles = new ArrayList<>(angles);
-			int number_od_roads = this.number_of_roads;
+			int number_od_roads = this.getNumber_of_roads();
 			Crossroad new_crossroad = new Crossroad(number_od_roads, new_angles);
 			rt.add(new_crossroad);
 		}
@@ -179,5 +187,10 @@ public class Crossroad implements Serializable {
 		
 		return null;
 	}
+	public int getNumber_of_roads() {
+		return number_of_roads;
+	}
+
+	
 	
 }

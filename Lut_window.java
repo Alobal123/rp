@@ -1,4 +1,4 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import java.util.ArrayList;
 import javax.swing.JButton;
@@ -19,6 +19,8 @@ import javax.swing.Scrollable;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
+
+import krabec.citysimulator.Lut;
 
 public class Lut_window extends JDialog {
 	/**
@@ -106,7 +108,7 @@ public class Lut_window extends JDialog {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				panel.add(new Lut_panel(new Lut("New Lut",1,0,Color.black,city_window.city.network.settings),thiswindow));
+				panel.add(new Lut_panel(new Lut("New Lut",1,0,Color.black,city_window.city.getSettings()),thiswindow));
 				//panel.add(new_lut_button);
 				panel.updateUI();
 			}

@@ -1,8 +1,10 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import java.awt.Cursor;
 
 import javax.swing.SwingWorker;
+
+import krabec.citysimulator.City;
 
 public class StepWorker extends SwingWorker<String, String>{
 
@@ -27,7 +29,7 @@ public class StepWorker extends SwingWorker<String, String>{
 	}
 	@Override
 	protected void done(){
-			window.panel.repaint();
+			window.repaintPanel();
 			window.repaint();
 			window.setCursor(Cursor.getDefaultCursor());
 			if(run_next && !window.paused)

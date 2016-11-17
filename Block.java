@@ -42,7 +42,7 @@ public class Block extends City_part implements Serializable{
 		
 		ArrayList<Node> new_lot_borders = new ArrayList<>();
 		for(Node n: lot_borders){
-			Node newnode = new Node(n.point.x, n.point.y, n.major,true);
+			Node newnode = new Node(n.point.getX(), n.point.getY(), n.major,true);
 			new_lot_borders.add(newnode);
 		}
 		
@@ -265,7 +265,7 @@ public class Block extends City_part implements Serializable{
 		HashSet<Street> to_remove = new HashSet<>();
 		for(Node n: lot_borders){
 			for(Street s: n.streets){
-				Node middle = new Node((s.node1.point.x + s.node2.point.x)/2, (s.node1.point.y + s.node2.point.y)/2, null);
+				Node middle = new Node((s.node1.point.getX() + s.node2.point.getX())/2, (s.node1.point.getY() + s.node2.point.getY())/2, null);
 				if(check_if_inside(middle) == Street_Result.fail)
 					to_remove.add(s);
 			}
@@ -340,7 +340,7 @@ public class Block extends City_part implements Serializable{
 	private void control() {
 		ArrayList<City_part> to_remove = new ArrayList<>();
 		for(City_part cp: contained_city_parts){
-					Node center = new Node(cp.center.x, cp.center.y, null);
+					Node center = new Node(cp.center.getX(), cp.center.getY(), null);
 					if(check_if_inside(center) == Street_Result.fail)
 						to_remove.add(cp);
 		}

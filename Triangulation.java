@@ -3,7 +3,6 @@ package krabec.citysimulator;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 /*
@@ -39,6 +38,10 @@ class XYZ {
 
 public class Triangulation implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1998513236232907671L;
 	public static double EPSILON = 0.000001;
 
 	/*
@@ -301,7 +304,7 @@ public class Triangulation implements Serializable{
 	
 	private static Node find_node(XYZ xyz,List<Node> nodes){
 		for(Node n: nodes){
-			if(Math.abs(xyz.x - n.point.x) < 0.00001 && Math.abs(xyz.y - n.point.y) < 0.00001)
+			if(Math.abs(xyz.x - n.point.getX()) < 0.00001 && Math.abs(xyz.y - n.point.getY()) < 0.00001)
 				return n;
 		}
 		return null;
@@ -317,7 +320,7 @@ public class Triangulation implements Serializable{
 		XYZ[] points = new XYZ[ nv +3];
 	
 		for (int i=0; i<nv; i++){
-			points[i] = new XYZ( nodes.get(i).point.x, nodes.get(i).point.y, 0.0 );
+			points[i] = new XYZ( nodes.get(i).point.getX(), nodes.get(i).point.getY(), 0.0 );
 		}
 		
 		points[nv+0] = new XYZ(0,0,0);

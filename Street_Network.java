@@ -2,13 +2,14 @@ package krabec.citysimulator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+
+import krabec.citysimulator.ui.City_window;
 
 
 /**
@@ -17,6 +18,10 @@ import java.util.Random;
  */
 public class Street_Network implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6510576669225628174L;
 	/** Reprezentuje speciální typ køižovatky - slepou ulièku s jedinou ulicí.*/
 	public static final Crossroad end_of_road;
 	static {
@@ -27,7 +32,7 @@ public class Street_Network implements Serializable{
 	
 	int number = 0;
 	/** Všechny použitelné køižovatky. */
-	List<Crossroad> all_crossroads;
+	public List<Crossroad> all_crossroads;
 	
 	/** Seznam všech ètvrtí ve mìstì. */
 	List<Quarter> quarters = new ArrayList<>();
@@ -173,7 +178,7 @@ public class Street_Network implements Serializable{
 		for(City_part cp: q.contained_city_parts){
 			for(City_part cp2 : q.contained_city_parts){
 				if(cp != cp2){
-					Node center = new Node(cp2.center.x, cp2.center.y, null);
+					Node center = new Node(cp2.center.getX(), cp2.center.getY(), null);
 					if(cp.check_if_inside(center) == Street_Result.not_altered)
 						to_remove.add(cp2);
 				}
@@ -270,7 +275,7 @@ public class Street_Network implements Serializable{
 						length -= settings.minor_prolongation;
 					double dx = Math.sin(angle * Math.PI / 180) * length;
 					double dy = Math.cos(angle * Math.PI / 180) * length;
-					current_new_node.point = new Point(oldnode.point.x + dx, oldnode.point.y + dy);
+					current_new_node.point = new Point(oldnode.point.getX() + dx, oldnode.point.getY() + dy);
 				}
 				else if (result == Street_Result.fail){
 					revert_changes(oldnode, old_crossroad,major,to_grow_nodes);
@@ -410,7 +415,7 @@ public class Street_Network implements Serializable{
 		}
 		
 		if(intersecting != null){
-			Node trynode = new Node(intersection.x, intersection.y, intersecting.major,intersecting.built);
+			Node trynode = new Node(intersection.getX(), intersection.getY(), intersecting.major,intersecting.built);
 			
 			Street newstreet1 = new Street(intersecting.node1, trynode, intersecting.major,intersecting.built);
 			Street newstreet2 = new Street(intersecting.node2,trynode,intersecting.major,intersecting.built);
@@ -455,7 +460,7 @@ public class Street_Network implements Serializable{
 	
 	
 	private Street_Result check_if_in_quarter(Street newstreet){
-		Node middlenode = new Node((newstreet.node1.point.x+newstreet.node2.point.x)/2, (newstreet.node1.point.y+newstreet.node2.point.y)/2, null);
+		Node middlenode = new Node((newstreet.node1.point.getX()+newstreet.node2.point.getX())/2, (newstreet.node1.point.getY()+newstreet.node2.point.getY())/2, null);
 		for(Quarter q: quarters){
 			if(q.check_if_inside(middlenode) == Street_Result.not_altered){
 				return Street_Result.fail;
@@ -694,8 +699,8 @@ public class Street_Network implements Serializable{
 			Street oldstreet = quarter.streets.get(0);
 			Point x = oldstreet.node1.point;
 			Point y = oldstreet.node2.point;
-			double newx = (x.x + y.x)/2;
-			double newy = (x.y + y.y )/2;
+			double newx = (x.getX() + y.getX())/2;
+			double newy = (x.getY() + y.getY() )/2;
 			Node new_node = new Node(newx,newy, Street_type.major);
 			Street s1 = new Street(new_node, oldstreet.node1, Street_type.major);
 			Street s2 = new Street(new_node, oldstreet.node2, Street_type.major);

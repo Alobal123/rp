@@ -4,18 +4,20 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EmptyStackException;
 import java.util.HashSet;
-
-import krabec.citysimulator.Node.NodeComparator;
 
 // TODO: Auto-generated Javadoc
 /**
  * Tøída reprezentující uzel v grafu ulic, typicky tedy køižovatku.
  */
-public class Node implements Serializable, Comparable{
+public class Node implements Serializable, Comparable<Object>{
 	
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5532262799594332955L;
+
 	/**
 	 * Tøída sloužící ke tøídìní ulic, podle úhlu, jaký svírají s osou y ve smìru hodinových ruèièek.
 	 */
@@ -58,7 +60,7 @@ public class Node implements Serializable, Comparable{
 	double angle;
 	
 	/**Seznam ulic vedoucích z tohoto uzlu.*/
-	ArrayList<Street> streets = new ArrayList<>();
+	public ArrayList<Street> streets = new ArrayList<>();
 	
 	/**Seznam blokù, na jejichž hranici se tento uzel vyskytuje. */
 	ArrayList<Block> blocks = new ArrayList<>();
@@ -113,7 +115,7 @@ public class Node implements Serializable, Comparable{
 	 * @return Úhel uzlu
 	 */
 	public double compute_angle(){
-		if(streets.size() != crossroad.number_of_roads){
+		if(streets.size() != crossroad.getNumber_of_roads()){
 			return 0;
 			//System.out.println(this);
 			
@@ -123,19 +125,19 @@ public class Node implements Serializable, Comparable{
 		}
 		else{
 			this.sort();
-			for (int i = 0; i < this.crossroad.number_of_roads; i++) {
+			for (int i = 0; i < this.crossroad.getNumber_of_roads(); i++) {
 				int same_angles = 0;
-				for (int j = 0; j < this.crossroad.number_of_roads; j++) {
+				for (int j = 0; j < this.crossroad.getNumber_of_roads(); j++) {
 						
-					double angle_between_streets = (360 + Street.get_oriented_angle(streets.get((i+j)%crossroad.number_of_roads),
-																	streets.get((i+j+1)%crossroad.number_of_roads),this)) %360;
+					double angle_between_streets = (360 + Street.get_oriented_angle(streets.get((i+j)%crossroad.getNumber_of_roads()),
+																	streets.get((i+j+1)%crossroad.getNumber_of_roads()),this)) %360;
 					//System.out.println("absolute angle" + angle_between_streets);
 					if((Math.abs(angle_between_streets - crossroad.angles.get(j)) < 0.00001)){
 						same_angles++;
 					}	
 					
 				}
-				if(same_angles == crossroad.number_of_roads){
+				if(same_angles == crossroad.getNumber_of_roads()){
 					return (streets.get(i).get_absolute_angle(this));
 				}
 			}
@@ -158,35 +160,21 @@ public class Node implements Serializable, Comparable{
 	 * @param street Ulice
 	 * @return Vzdálenost od ulice.
 	 */
-	public double distance(Street street){
-		/*double px = street.node2.point.x - street.node1.point.x;
-		double py = street.node2.point.y - street.node1.point.y;
-		double square = px * px + py * py;
-		double u =  ((point.x - street.node1.point.x) * px + (point.y - street.node1.point.y) * py) / square;
-		if (u > 1)
-		    u = 1;
-		else if (u < 0)
-		    u = 0;
-	    double x = street.node1.point.x + u * px;
-	    double y = street.node1.point.y + u * py;
-	    double dx = x - point.x;
-	    double dy = y - point.y;
-	    return Math.sqrt(dx*dx + dy * dy);*/
-		
+	public double distance(Street street){	
 		Point v = street.node1.point;
 		Point w = street.node2.point;
 		Point p = this.point;
 		Point direction = v.minus(w);
 		double length_squared = Math.abs(Point.dot(direction,direction));
 		double t = Math.max(0, Math.min(1, Point.dot(p.minus(v),w.minus(v))/length_squared));
-		Point projection = v.plus(new Point(w.minus(v).x*t,w.minus(v).y*t));
+		Point projection = v.plus(new Point(w.minus(v).getX()*t,w.minus(v).getY()*t));
 		return Point.dist(projection, p);
 		
 	}
 	
 	@Override
 	public String toString(){
-		return "Node at: (" + (int)(point.x*1000)/1000.0 + "," + (int)(point.y*1000)/1000.0 + ")";
+		return "Node at: (" + (int)(point.getX()*1000)/1000.0 + "," + (int)(point.getY()*1000)/1000.0 + ")";
 	}
 	
 	/**
@@ -214,10 +202,10 @@ public class Node implements Serializable, Comparable{
 	public static Node make_new_node(double angle, Street_type major, Node oldnode, double length){
 		double dx = Math.sin(angle * Math.PI / 180) * length;
 		double dy = Math.cos(angle * Math.PI / 180) * length;
-		return new Node(oldnode.point.x + dx, oldnode.point.y + dy, major);
+		return new Node(oldnode.point.getX() + dx, oldnode.point.getY() + dy, major);
 	}
 	public Node copy_node (Block block){
-		Node newnode = new Node(this.point.x, this.point.y, this.major);
+		Node newnode = new Node(this.point.getX(), this.point.getY(), this.major);
 		newnode.built = this.built;
 		for(Street s: this.streets){
 			HashSet<Node> nodes = block.get_nodes_once();
@@ -245,9 +233,9 @@ public class Node implements Serializable, Comparable{
 	@Override
 	public int compareTo(Object o) {
 		Node n = (Node) o;
-		if(point.x>n.point.x)
+		if(point.getX()>n.point.getX())
 			return 1;
-		else if(point.x==n.point.x)
+		else if(point.getX()==n.point.getX())
 			return 0;
 		else 
 			return -1;

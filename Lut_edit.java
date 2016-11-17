@@ -1,9 +1,7 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.FlowLayout;
-
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
@@ -12,11 +10,14 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import krabec.citysimulator.Lut;
+import krabec.citysimulator.Mapping;
+import krabec.citysimulator.Valuation;
+import krabec.citysimulator.Valuation_Types;
 import javax.swing.JLabel;
 import java.awt.GridLayout;
 import javax.swing.JTextField;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.awt.event.ActionEvent;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
@@ -32,13 +33,13 @@ public class Lut_edit extends JDialog {
 	JPanel panel;
 	private JTextField textField;
 	private JSpinner textField_1;
-	private JTextField textField_2;
+
 	
 	/**
 	 * Create the dialog.
 	 */
 	public Lut_edit(Lut lut,Lut_panel parent) {
-		this.setTitle("Editing "+ lut.name);
+		this.setTitle("Editing "+ lut.getName());
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		this.lut = lut;
 		this.parent = parent;
@@ -59,17 +60,17 @@ public class Lut_edit extends JDialog {
 			{
 				textField = new JTextField();
 				panel.add(textField);
-				textField.setText(lut.name);
+				textField.setText(lut.getName());
 				textField.setColumns(10);
 				textField.getDocument().addDocumentListener(new DocumentListener() {
 					  public void changedUpdate(DocumentEvent e) {
-					    lut.name = textField.getText();
+					    lut.setName(textField.getText());
 					  }
 					  public void removeUpdate(DocumentEvent e) {
-						  lut.name = textField.getText();
+						  lut.setName(textField.getText());
 					  }
 					  public void insertUpdate(DocumentEvent e) {
-						  lut.name = textField.getText();
+						  lut.setName(textField.getText());
 					  }
 					   
 				});
@@ -109,7 +110,7 @@ public class Lut_edit extends JDialog {
 					public void actionPerformed(ActionEvent arg0) {
 						control_and_set();
 						thiswindow.dispose();
-						parent.namelabel.setText(lut.name);
+						parent.namelabel.setText(lut.getName());
 						
 					}
 				});
@@ -158,7 +159,7 @@ public class Lut_edit extends JDialog {
 		catch(NumberFormatException e){
 			return false;
 		}
-		lut.name = textField.getText();
+		lut.setName(textField.getText());
 		lut.residents = residents;
 		return true;
 			

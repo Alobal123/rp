@@ -19,11 +19,12 @@ public class Simple_paint implements Serializable{
 	int magn = 400; 
 	City_part current_part = null;
 	City_part current_block =null;
-	Street_Network network;
-	City city;
+	private Street_Network network;
+	private City city;
 	
-	public Simple_paint(Street_Network network){
-		this.network = network;
+	public Simple_paint(City city){
+		this.city = city;
+		this.network = city.network;
 	}
 	
 	public void paint(Graphics g,boolean growth,boolean centers) {
@@ -76,8 +77,8 @@ public class Simple_paint implements Serializable{
 		ArrayList<Point> points  = q.get_points();
 		
 		for (int i = 0; i < points.size(); i++) {
-			xs[i] = ((int)(points.get(i).x*magn/2)+size/2);
-			ys[i] = ((int)(points.get(i).y*-magn/2)+size/2);
+			xs[i] = ((int)(points.get(i).getX()*magn/2)+size/2);
+			ys[i] = ((int)(points.get(i).getY()*-magn/2)+size/2);
 			
 		}
 		if(color == null){
@@ -110,15 +111,15 @@ public class Simple_paint implements Serializable{
 	
 	private void draw_node(Node n, Graphics g, Color color){
 		g.setColor(color);
-		g.fillOval((int)(n.point.x*magn/2)+size/2-3, (int)(-1*n.point.y*magn/2)+size/2-3,6, 6);
+		g.fillOval((int)(n.point.getX()*magn/2)+size/2-3, (int)(-1*n.point.getY()*magn/2)+size/2-3,6, 6);
 	}
 	
 	private void draw_street(Street s, Graphics g,Color color,Random rnd){
 		
-		int x1 = (int)(s.node1.point.x*magn/2) + size/2;
-		int y1 = (int)(s.node1.point.y*-magn/2) + size/2;
-		int x2 = (int)(s.node2.point.x*magn/2) + size/2;
-		int y2 = (int)(s.node2.point.y*-magn/2) + size/2;
+		int x1 = (int)(s.node1.point.getX()*magn/2) + size/2;
+		int y1 = (int)(s.node1.point.getY()*-magn/2) + size/2;
+		int x2 = (int)(s.node2.point.getX()*magn/2) + size/2;
+		int y2 = (int)(s.node2.point.getY()*-magn/2) + size/2;
 		
 		if(s.built){
 			if(color == null){
@@ -140,8 +141,8 @@ public class Simple_paint implements Serializable{
 		ArrayList<Point> points  = building.placement;
 		
 		for (int i = 0; i < points.size(); i++) {
-			xs[i] = ((int)(points.get(i).x*magn/2)+size/2);
-			ys[i] = ((int)(points.get(i).y*-magn/2)+size/2);
+			xs[i] = ((int)(points.get(i).getX()*magn/2)+size/2);
+			ys[i] = ((int)(points.get(i).getY()*-magn/2)+size/2);
 			
 		}
 		g.fillPolygon(xs,ys,points.size());
@@ -200,13 +201,13 @@ public class Simple_paint implements Serializable{
 	public void draw_city_centers(Graphics g){
 		for(Point p : network.citycenters){
 			g.setColor(Color.yellow);
-			g.fillOval((int)(p.x*magn/2)+size/2-3, (int)(-1*p.y*magn/2)+size/2-3,10, 10);
+			g.fillOval((int)(p.getX()*magn/2)+size/2-3, (int)(-1*p.getY()*magn/2)+size/2-3,10, 10);
 		}
 	}
 	public void draw_growth_centers(Graphics g){
 		for(Point p : network.growthcenters){
 			g.setColor(Color.green);
-			g.fillOval((int)(p.x*magn/2)+size/2-3, (int)(-1*p.y*magn/2)+size/2-3,10, 10);
+			g.fillOval((int)(p.getX()*magn/2)+size/2-3, (int)(-1*p.getY()*magn/2)+size/2-3,10, 10);
 		}
 	}
 	
@@ -228,4 +229,14 @@ public class Simple_paint implements Serializable{
 		else
 			points.add(trynode.point);
 	}
+
+	public City getCity() {
+		return city;
+	}
+
+	public void setCity(City city) {
+		this.city = city;
+		this.network = city.network;
+	}
+
 }

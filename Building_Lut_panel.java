@@ -1,9 +1,11 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import javax.swing.JPanel;
+
+import krabec.citysimulator.Building;
+import krabec.citysimulator.Lut;
 import javax.swing.JLabel;
 import javax.swing.JCheckBox;
-import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.BorderLayout;
@@ -11,6 +13,11 @@ import java.awt.Dimension;
 
 
 public class Building_Lut_panel extends JPanel {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8272238778161834885L;
 
 	/**
 	 * Create the panel.
@@ -37,23 +44,23 @@ public class Building_Lut_panel extends JPanel {
 		setLayout(new BorderLayout(0, 0));
 		
 		JLabel lblNewLabel = new JLabel("New label");
-		lblNewLabel.setText(lut.name);
+		lblNewLabel.setText(lut.getName());
 		add(lblNewLabel);
 		
 		JCheckBox chckbxNewCheckBox = new JCheckBox("");
 		chckbxNewCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if(chckbxNewCheckBox.isSelected()){
-					lut.buildings.add(building);
+					lut.getBuildings().add(building);
 					lut.find_min_area();	
 				}
 				else{
-					lut.buildings.remove(building);
+					lut.getBuildings().remove(building);
 					lut.find_min_area();
 				}
 			}
 		});
-		chckbxNewCheckBox.setSelected(lut.buildings.contains(building));
+		chckbxNewCheckBox.setSelected(lut.getBuildings().contains(building));
 		add(chckbxNewCheckBox, BorderLayout.EAST);
 	}
 	

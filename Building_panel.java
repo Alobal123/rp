@@ -1,4 +1,4 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import javax.swing.JPanel;
 import java.awt.GridLayout;
@@ -9,6 +9,10 @@ import javax.swing.JButton;
 import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+
+import krabec.citysimulator.Building;
+import krabec.citysimulator.Lut;
+import krabec.citysimulator.Point;
 
 import java.awt.Font;
 import javax.swing.JTextField;
@@ -33,7 +37,7 @@ public class Building_panel extends JPanel {
 		this.building = building;
 		setLayout(new GridLayout(2, 6, 0, 0));
 		
-		JTextField lblNewLabel = new JTextField(building.name);
+		JTextField lblNewLabel = new JTextField(building.getName());
 		lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		lblNewLabel.setFont(new Font("Tahoma", Font.BOLD, 11));
 		add(lblNewLabel);
@@ -49,7 +53,7 @@ public class Building_panel extends JPanel {
 			  }
 			  private void update(){
 				  try{
-					 building.name = lblNewLabel.getText();
+					 building.setName(lblNewLabel.getText());
 				  }
 				  catch(NumberFormatException e){
 					  
@@ -81,12 +85,10 @@ public class Building_panel extends JPanel {
 			  private void update(){
 				  try{
 					  double n = Double.parseDouble(x1.getText());
-					  //building.points.get(0).x = 0;
 					  building.place(new Point(0, 0));
-					  building.points.get(1).y = n;
-					  building.points.get(2).y = n;
+					  building.points.get(1).setX(n);
+					  building.points.get(2).setX(n);
 					  building.place(new Point(0, 0));
-					  System.out.println(building);
 				  }
 				  catch(NumberFormatException e){
 					  
@@ -136,8 +138,8 @@ public class Building_panel extends JPanel {
 					  double n = Double.parseDouble(y1.getText());
 					 // building.points.get(0).y = 0;
 					  building.place(new Point(0, 0));
-					  building.points.get(2).x = n;
-					  building.points.get(3).x = n;
+					  building.points.get(2).setY(n);
+					  building.points.get(3).setY(n);
 					  building.place(new Point(0, 0));
 					  System.out.println(building);
 				  }

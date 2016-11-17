@@ -1,4 +1,4 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -10,9 +10,18 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import krabec.citysimulator.Building;
+import krabec.citysimulator.Lut;
+
 import java.awt.GridLayout;
 
 public class Building_Lut_Window extends JDialog {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6768450950957361766L;
 
 	private final JPanel contentPanel = new JPanel();
 

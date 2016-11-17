@@ -1,4 +1,4 @@
-package krabec.citysimulator;
+package krabec.citysimulator.ui;
 
 import java.awt.FlowLayout;
 import java.util.ArrayList;
@@ -14,6 +14,9 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
+
+import krabec.citysimulator.Crossroad;
+import krabec.citysimulator.Street_Network;
 
 
 public class Cross_window extends JDialog {
@@ -133,18 +136,18 @@ public class Cross_window extends JDialog {
 	
 	private boolean control(Crossroad crossroad){
 		double sum =0;
-		if(crossroad.number_of_roads ==0|| crossroad.angles.size()==0)
+		if(crossroad.getNumber_of_roads() ==0|| crossroad.angles.size()==0)
 			return false;
-		if(crossroad.number_of_roads != crossroad.angles.size())
+		if(crossroad.getNumber_of_roads() != crossroad.angles.size())
 			return false;
-		for (int i = 0; i < crossroad.number_of_roads-1; i++) {
+		for (int i = 0; i < crossroad.getNumber_of_roads()-1; i++) {
 			sum += crossroad.angles.get(i);
 		}
-		double last = crossroad.angles.get(crossroad.number_of_roads-1);
+		double last = crossroad.angles.get(crossroad.getNumber_of_roads()-1);
 		if(sum + last  == 360)
 			return true;
 		else{
-			crossroad.angles.set(crossroad.number_of_roads-1, 360-sum);
+			crossroad.angles.set(crossroad.getNumber_of_roads()-1, 360-sum);
 			return true;
 		}
 	}
