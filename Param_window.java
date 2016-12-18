@@ -42,8 +42,9 @@ public class Param_window extends JDialog {
 	private JTextField textField_12;
 	private JTextField textField_13;
 	private JTextField textField_14;
+	private JTextField textField_15;
 	
-
+	
 	/**
 	 * Create the dialog.
 	 */
@@ -51,7 +52,7 @@ public class Param_window extends JDialog {
 		this.settings = settings;
 		this.setTitle("Parameters");
 		Param_window thiswindow = this;
-		setBounds(100, 100, 468, 594);
+		setBounds(100, 100, 468, 614);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -222,6 +223,38 @@ public class Param_window extends JDialog {
 				   
 			});
 			contentPanel.add(textField_14);
+		}
+		{
+			JLabel lblBuildingOffset = new JLabel("Building Offset");
+			contentPanel.add(lblBuildingOffset);
+		}
+		{
+			textField_15 = new JTextField();
+			textField_15.setText((String) null);
+			textField_15.setColumns(10);
+			textField_15.setText(Double.toString(settings.street_offset));
+			contentPanel.add(textField_15);
+			textField_15.getDocument().addDocumentListener(new DocumentListener() {
+				  public void changedUpdate(DocumentEvent e) {
+					  update();
+				  }
+				  public void removeUpdate(DocumentEvent e) {
+					  update();
+				  }
+				  public void insertUpdate(DocumentEvent e) {
+					  update();
+				  }
+				  private void update(){
+					  try{
+						  double n = Double.parseDouble(textField_15.getText());
+						  settings.street_offset = n;
+					  }
+					  catch(NumberFormatException e){
+						  
+					  }
+				  }
+				   
+			});
 		}
 		{
 			JLabel lblNewLabel_3 = new JLabel("Allowed distance of streets");
@@ -422,7 +455,6 @@ public class Param_window extends JDialog {
 			}
 			{
 				textField_10 = new JTextField();
-				textField_10.setText("0.05");
 				textField_10.setColumns(10);
 				textField_10.setText(Double.toString(settings.build_cost));
 				contentPanel.add(textField_10);
@@ -454,7 +486,6 @@ public class Param_window extends JDialog {
 			}
 			{
 				textField_11 = new JTextField();
-				textField_11.setText("0.2");
 				textField_11.setColumns(10);
 				textField_11.setText(Double.toString(settings.lut_resample_cost));
 				textField_11.getDocument().addDocumentListener(new DocumentListener() {
@@ -495,7 +526,6 @@ public class Param_window extends JDialog {
 			}
 			{
 				textField_12 = new JTextField();
-				textField_12.setText("0.05");
 				textField_12.setColumns(10);
 				textField_12.setText(Double.toString(settings.major_street_capacity));
 				contentPanel.add(textField_12);

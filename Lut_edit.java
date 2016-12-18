@@ -5,6 +5,7 @@ import java.awt.FlowLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -44,7 +45,7 @@ public class Lut_edit extends JDialog {
 		this.lut = lut;
 		this.parent = parent;
 		Lut_edit thiswindow = this;
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 450, 600);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -95,11 +96,13 @@ public class Lut_edit extends JDialog {
 			}
 
 		}
-		{
-			panel = new JPanel();
-			contentPanel.add(panel, BorderLayout.CENTER);
+
+			JPanel panel_1 = new JPanel();
+			contentPanel.add(panel_1,BorderLayout.CENTER);
+			
+			panel = new Panelscrollable();
 			panel.setLayout(new GridLayout(0, 1, 0, 0));
-		}
+
 		{
 			JPanel buttonPane = new JPanel();
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -134,20 +137,27 @@ public class Lut_edit extends JDialog {
 		for(Valuation val: lut.valuations){
 			panel.add(new Val_panel(val,thiswindow));
 		}
+		panel_1.setLayout(new BorderLayout(0, 0));
 		JButton new_lut_button = new JButton("New");
-		panel.add(new_lut_button);
+		panel_1.add(new_lut_button, BorderLayout.SOUTH);
 		new_lut_button.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				panel.remove(new_lut_button);
 				Val_panel newpanel = new Val_panel(new Valuation(0, Valuation_Types.constant, Mapping.constant, 0, 1), thiswindow);
 				panel.add(newpanel);
 				parent.lut.valuations.add(newpanel.valuation);
-				panel.add(new_lut_button);
 				panel.updateUI();
 			}
 		});
+		
+		JScrollPane scrollPane = new JScrollPane();
+		panel_1.add(scrollPane);
+		scrollPane.setVerticalScrollBarPolicy(
+				   JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
+		scrollPane.setHorizontalScrollBarPolicy(
+				   JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); 
+		scrollPane.setViewportView(panel);
 	}
 
 	

@@ -143,7 +143,7 @@ public class Node_Distance implements Serializable{
 			fscore.put(node, Double.MAX_VALUE);
 		}
 		gscore.put(start, 0.0);
-		fscore.put(start, Point.dist(start.point, goal.point));
+		fscore.put(start, Point.dist(start.getPoint(), goal.getPoint()));
 		
 		PriorityQueue<Node> queue = new PriorityQueue<>(comparator);
 		queue.add(start);
@@ -162,7 +162,7 @@ public class Node_Distance implements Serializable{
 						continue;
 					if(tentative_gScore < gscore.get(neighbour)){
 						gscore.put(neighbour, tentative_gScore);
-						fscore.put(neighbour, Point.dist(neighbour.point, goal.point));
+						fscore.put(neighbour, Point.dist(neighbour.getPoint(), goal.getPoint()));
 						previous.put(neighbour, current);
 	                    if (!queue.contains(neighbour)) {
 	                        queue.add(neighbour);

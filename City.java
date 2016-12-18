@@ -50,7 +50,7 @@ public class City implements Serializable{
 	 * Novým blokù urèí jejich nejvýhodnìjší Lut a poté ještì se pokusí vylepšit hodnotu celého mìsta 
 	 */
 	public void step(){
-		List<Node> changed_nodes = network.grow_major_streets(10);  //TODO pocitat kolik se ma narust hlavnich ulic
+		List<Node> changed_nodes = network.grow_major_streets(5);
 		HashSet<Node> nodes_to_check = new HashSet<>();
 		for (Node node : changed_nodes) {
 			nodes_to_check.add(node);
@@ -103,7 +103,7 @@ public class City implements Serializable{
 			for (int i = 0; i < network.nodes.size(); i++) {
 				Node possible_end = network.nodes.get(i);
 				if(possible_end != node)
-					distribution[i] = possible_end.residents * Math.pow(Math.E,-1*Point.dist(node.point, possible_end.point));
+					distribution[i] = possible_end.residents * Math.pow(Math.E,-1*Point.dist(node.getPoint(), possible_end.getPoint()));
 				distSum +=distribution[i];
 			}
 			double rand = Math.random();
@@ -128,8 +128,8 @@ public class City implements Serializable{
 				for (Street s: node.streets){
 					if(!s.built && s.traffic >= getSettings().build_cost){
 						s.built = true;
-						s.node1.built = true;
-						s.node2.built = true;
+						s.node1.setBuilt(true);
+						s.node2.setBuilt(true);
 					}
 				}
 			}
@@ -256,20 +256,6 @@ public class City implements Serializable{
 				}
 				
 				b.lut = bestlut;
-				/*for(Node n: b.lot_borders){
-					Iterator<Street> i = n.streets.iterator();
-						while (i.hasNext()) {
-						   Street s = i.next(); 
-						  if(s.major == Street_type.lot_border)
-							  i.remove();
-						}
-				}
-				Iterator<Node> i = b.lot_borders.iterator();
-				while (i.hasNext()) {
-				  Node n = i.next(); 
-				  if(n.major == Street_type.lot_border)
-					  i.remove();
-				}*/
 				
 				b.lot_borders = new ArrayList<>();
 				for(Node n: b.get_nodes_once()){
@@ -278,7 +264,7 @@ public class City implements Serializable{
 				
 				ArrayList<Node> new_lot_borders = new ArrayList<>();
 				for(Node n: b.lot_borders){
-					Node newnode = new Node(n.point.getX(), n.point.getY(), n.major,true);
+					Node newnode = new Node(n.getPoint().getX(), n.getPoint().getY(), n.major,true);
 					new_lot_borders.add(newnode);
 				}
 				
@@ -292,11 +278,8 @@ public class City implements Serializable{
 					}
 				}
 				b.remove_useless_nodes(new_lot_borders);
-				
 				b.lot_borders = new_lot_borders;
-				
 				b.contained_city_parts = new ArrayList<>();
-
 				b.divide_to_convex();
 
 				for(City_part current_part: b.contained_city_parts){

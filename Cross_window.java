@@ -2,17 +2,21 @@ package krabec.citysimulator.ui;
 
 import java.awt.FlowLayout;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import java.awt.GridLayout;
+import java.awt.JobAttributes;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 
 import krabec.citysimulator.Crossroad;
@@ -31,47 +35,26 @@ public class Cross_window extends JDialog {
 	 * @param all_crossroads 
 	 */
 	public Cross_window(List<Crossroad> all_crossroads, City_window citywindow) {
+		this.setResizable(false);
 		this.setTitle("Crossroads");
+		Collections.sort(all_crossroads);
 		Cross_window thiswindow = this;
 		this.citywindow = citywindow;
 		this.crossroads = (ArrayList<Crossroad>) all_crossroads;
-		setBounds(100, 100, 624, 528);
+		setBounds(200, 100, 600, 600);
 		getContentPane().setLayout(new BorderLayout());
-		
-		panel = new JPanel();
+
+		panel = new Panelscrollable();
 		panel.setLayout(new GridLayout(0, 1, 0, 0));
-		getContentPane().add(panel);
 		
 		JPanel panel_1 = new JPanel();
-		panel.add(panel_1);
+		getContentPane().add(panel_1, BorderLayout.CENTER);
 		panel_1.setLayout(new BorderLayout(0, 0));
 		
-		JLabel lblNumberOfRoads = new JLabel("   Number of roads");
-	
-		lblNumberOfRoads.setHorizontalAlignment(SwingConstants.CENTER);
-		panel_1.add(lblNumberOfRoads, BorderLayout.WEST);
-		
-		JLabel lblAngles = new JLabel("Angles");
-		lblAngles.setHorizontalAlignment(SwingConstants.CENTER);
-		panel_1.add(lblAngles, BorderLayout.CENTER);
 		for(Crossroad crossroad: remove_duplicates(crossroads)){
 			Cross_panel cpanel = new Cross_panel(crossroad,this);
 			panel.add(cpanel);
 		}
-		
-		
-		JButton new_cross_button = new JButton("New");
-		panel.add(new_cross_button);
-		new_cross_button.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				panel.remove(new_cross_button);
-				panel.add(new Cross_panel(new Crossroad(0, new ArrayList<>()), thiswindow));
-				panel.add(new_cross_button);
-				panel.updateUI();
-			}
-		});
 		
 		{
 			JPanel buttonPane = new JPanel();
@@ -107,34 +90,56 @@ public class Cross_window extends JDialog {
 				buttonPane.add(cancelButton);
 			}
 		}
+		
+
+		
+		JButton new_cross_button = new JButton("New");
+		panel_1.add(new_cross_button,BorderLayout.SOUTH);
+		new_cross_button.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				panel.add(new Cross_panel(new Crossroad(0, new ArrayList<>()), thiswindow));
+				panel.updateUI();
+			}
+		});
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setVerticalScrollBarPolicy(
+				   JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
+		scrollPane.setHorizontalScrollBarPolicy(
+				   JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); 
+		panel_1.add(scrollPane, BorderLayout.CENTER);
+		scrollPane.setViewportView(panel);
+
 	}
 	
 	
 	private void create_crossroads(ArrayList<Crossroad> all_crossroads) {
+		boolean succes = true;
 		for(Component c: panel.getComponents()){
 			if(c instanceof Cross_panel){
-				create_crossroad(all_crossroads, (Cross_panel)c);
+				succes = succes && create_crossroad(all_crossroads, (Cross_panel)c);
 			}
+		}
+		if(!succes){
+			JOptionPane.showMessageDialog(this, "Not all crossroads could be created.");
 		}
 	}
 	
-	private void create_crossroad(List<Crossroad> all_crossroads,Cross_panel panel){
-		Crossroad c = new Crossroad(Integer.parseInt(panel.fieldn.getText()), new ArrayList<>());
-		for (JTextField jtf: panel.fields) {
-			double angle = 0;
-			try{
-				angle = Double.parseDouble(jtf.getText());
-				c.angles.add(angle);
-			}
-			catch(NumberFormatException e){	
-			}
-			
-		}
+	private boolean create_crossroad(List<Crossroad> all_crossroads,Cross_panel panel){
+		Crossroad c = Crossroad.Read_crossroad(panel.textfield.getText());
+		boolean rt = true;
 		if(control(c))
 			all_crossroads.addAll(c.get_all_rotations());
+		else
+			rt = false;
+		return rt;
+			
 	}
 	
 	private boolean control(Crossroad crossroad){
+		if(crossroad == null)
+			return false;
 		double sum =0;
 		if(crossroad.getNumber_of_roads() ==0|| crossroad.angles.size()==0)
 			return false;

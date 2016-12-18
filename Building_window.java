@@ -1,6 +1,7 @@
 package krabec.citysimulator.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,6 +10,7 @@ import java.util.HashSet;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
 import krabec.citysimulator.Building;
@@ -30,17 +32,17 @@ public class Building_window extends JDialog {
 	 */	
 	public Building_window(ArrayList<Lut> luts) {
 		this.setTitle("Buildings");
+		this.setResizable(false);
 		Building_window thiswindow = this;
-		setBounds(100, 100, 766, 482);
+		setBounds(200, 100, 640, 700);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
+		JPanel panel_1 = new JPanel();
+		contentPane.add(panel_1,BorderLayout.CENTER);
 		
-		
-		
-		JPanel panel = new JPanel();
-		contentPane.add(panel, BorderLayout.CENTER);
+		JPanel panel = new Panelscrollable();
 		panel.setLayout(new GridLayout(0, 1, 0, 10));
 		
 		HashSet<Building> buildings =  new HashSet<>();
@@ -50,16 +52,27 @@ public class Building_window extends JDialog {
 		for(Building b: buildings){
 			panel.add(new Building_panel(b, luts));
 		}
+		panel_1.setLayout(new BorderLayout(0, 0));
+		
+		JScrollPane scrollPane = new JScrollPane();
+		panel_1.add(scrollPane);
+		scrollPane.setVerticalScrollBarPolicy(
+				   JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
+		scrollPane.setHorizontalScrollBarPolicy(
+				   JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); 
+		scrollPane.setViewportView(panel);
+		{
+			scrollPane.setViewportView(panel);
+		}
+		
 		
 		JButton new_lut_button = new JButton("New");
-		panel.add(new_lut_button);
+		panel_1.add(new_lut_button,BorderLayout.SOUTH);
 		new_lut_button.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				panel.remove(new_lut_button);
 				panel.add(new Building_panel(new Building(),luts));
-				panel.add(new_lut_button);
 				panel.updateUI();
 			}
 		});

@@ -1,19 +1,18 @@
 package krabec.citysimulator.ui;
-
 import javax.swing.JPanel;
 import java.awt.GridLayout;
 import java.util.ArrayList;
-
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JButton;
 import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-
 import krabec.citysimulator.Building;
 import krabec.citysimulator.Lut;
 import krabec.citysimulator.Point;
 
+import java.awt.Dimension;
 import java.awt.Font;
 import javax.swing.JTextField;
 import java.awt.event.ActionListener;
@@ -29,6 +28,12 @@ public class Building_panel extends JPanel {
 	ArrayList<Lut> luts;
 	private JTextField x1;
 	private JTextField y1;
+	
+	
+	@Override
+	public  Dimension getPreferredSize(){
+		return new Dimension(600, 60);
+	}
 	/**
 	 * Create the panel.
 	 */
@@ -36,6 +41,7 @@ public class Building_panel extends JPanel {
 		this.luts = luts;
 		this.building = building;
 		setLayout(new GridLayout(2, 6, 0, 0));
+	
 		
 		JTextField lblNewLabel = new JTextField(building.getName());
 		lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -85,10 +91,15 @@ public class Building_panel extends JPanel {
 			  private void update(){
 				  try{
 					  double n = Double.parseDouble(x1.getText());
-					  building.place(new Point(0, 0));
-					  building.points.get(1).setX(n);
-					  building.points.get(2).setX(n);
-					  building.place(new Point(0, 0));
+					  if(n>0){
+						  building.place(new Point(0, 0));
+						  building.points.get(1).setX(n);
+						  building.points.get(2).setX(n);
+						  building.place(new Point(0, 0));
+					  }
+					  else{
+						  JOptionPane.showMessageDialog(null, "Side of building must be a positive number");
+					  }
 				  }
 				  catch(NumberFormatException e){
 					  
@@ -104,7 +115,6 @@ public class Building_panel extends JPanel {
 					Building_Lut_Window blw = new Building_Lut_Window(luts,building);
 					blw.setVisible(true);
 					blw.setAlwaysOnTop(true);
-					blw.pack();
 					
 				} catch (Exception e2) {
 					e2.printStackTrace();
@@ -136,12 +146,15 @@ public class Building_panel extends JPanel {
 			  private void update(){
 				  try{
 					  double n = Double.parseDouble(y1.getText());
-					 // building.points.get(0).y = 0;
-					  building.place(new Point(0, 0));
-					  building.points.get(2).setY(n);
-					  building.points.get(3).setY(n);
-					  building.place(new Point(0, 0));
-					  System.out.println(building);
+					  if(n>0){
+						  building.place(new Point(0, 0));
+						  building.points.get(2).setY(n);
+						  building.points.get(3).setY(n);
+						  building.place(new Point(0, 0));
+					  }
+					  else{
+						  JOptionPane.showMessageDialog(null, "Side of building must be a positive number");
+					  }
 				  }
 				  catch(NumberFormatException e){
 					  

@@ -18,7 +18,7 @@ public abstract class City_part implements Serializable{
 	private static final long serialVersionUID = -7374818903326872052L;
 	/** Seznam ulic ohranièujích tuto mìstskou èást. */
 	List<Street> streets = new ArrayList<Street>();
-	List<City_part> contained_city_parts = new ArrayList<>();
+	public List<City_part> contained_city_parts = new ArrayList<>();
 	
 	/**První uzel, tj. uzel ze kterého vychází první ulice v atributu streets. */
 	Node firstnode;
@@ -109,8 +109,8 @@ public abstract class City_part implements Serializable{
 		for (Street s: streets) {
 			
 			if(points.size() == 0){
-				points.add(s.other_node(firstnode).point);
-				points.add(firstnode.point);
+				points.add(s.other_node(firstnode).getPoint());
+				points.add(firstnode.getPoint());
 				
 			}
 			else {
@@ -121,15 +121,15 @@ public abstract class City_part implements Serializable{
 							count++;
 					}
 					if(count == 1)
-						points.add(s.node2.point);
+						points.add(s.node2.getPoint());
 					else
-						points.add(s.node1.point);
+						points.add(s.node1.getPoint());
 				}
 				else if(s.node1 == prev.node1 || s.node1 == prev.node2){
-					points.add(s.node2.point);
+					points.add(s.node2.getPoint());
 				}
 				else if (s.node2 == prev.node1 || s.node2 == prev.node2){
-					points.add(s.node1.point);
+					points.add(s.node1.getPoint());
 
 				}
 				else{
@@ -175,7 +175,7 @@ public abstract class City_part implements Serializable{
 		double angle = 0;
 		boolean inside = true;
 		for(Street s: streets){
-			if(newnode.distance(s) < 0.00001)
+			if(newnode.distance(s) < 0.0001)
 				return Street_Result.not_altered;
 		}
 		while(angle<360){
@@ -193,6 +193,17 @@ public abstract class City_part implements Serializable{
 		if(inside)
 			return Street_Result.not_altered;
 		return Street_Result.fail;
+	}
+	public Street Get_Longest_Street(){
+		double max = 0;
+		Street longest = null;
+		for(Street s: streets){
+			if(s.length > max){
+				max = s.length;
+				longest = s;
+			}
+		}
+		return longest;
 	}
 
 }

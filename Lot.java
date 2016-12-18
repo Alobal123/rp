@@ -2,6 +2,7 @@ package krabec.citysimulator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 
 
 /**
@@ -14,7 +15,7 @@ public class Lot extends City_part implements Serializable{
 	 */
 	private static final long serialVersionUID = 6035785538595754370L;
 	/** Budova stojící na tomto pozemku. */
-	Building building;
+	public Building building;
 	
 	/**
 	 * Konstruktor
@@ -48,8 +49,8 @@ public class Lot extends City_part implements Serializable{
 		double move = Math.random();
 		move = 0.5 - move/50;
 		
-		double newx = (move*longest.node1.point.getX() + (1-move)*longest.node2.point.getX());
-		double newy = (move*longest.node1.point.getY() + (1-move)*longest.node2.point.getY());
+		double newx = (move*longest.node1.getPoint().getX() + (1-move)*longest.node2.getPoint().getX());
+		double newy = (move*longest.node1.getPoint().getY() + (1-move)*longest.node2.getPoint().getY());
 		Node oldnode = new Node( newx , newy, longest.major,true);
 		oldnode.angle = longest.get_absolute_angle(longest.node1);
 		
@@ -57,7 +58,7 @@ public class Lot extends City_part implements Serializable{
 		boolean rt = false;
 		for(double d: angles){
 			Node newnode = Node.make_new_node((oldnode.angle+d)%360, Street_type.lot_border, oldnode, 1000);
-			newnode.built = true;
+			newnode.setBuilt(true);
 			Street newstreet = new Street(oldnode, newnode, Street_type.lot_border);
 			rt = rt|find_cross(longest, newstreet, oldnode, newnode, block);
 		}
@@ -139,16 +140,16 @@ public class Lot extends City_part implements Serializable{
 	private boolean find_cross(Street longest, Street newstreet,Node oldnode,Node newnode,Block block){
 		Street intersecting = null;
 		Point intersection = null;
-		double min = Point.dist(oldnode.point, newnode.point);
+		double min = Point.dist(oldnode.getPoint(), newnode.getPoint());
 		for (Node n: block.lot_borders) {
 			for(Street street: n.streets){
 				if(street != longest){
 					Point intersect = Street.getIntersection(street, newstreet);
-					if(intersect != null && Point.dist(oldnode.point, intersect) < min
-							&& Point.dist(intersect, street.node1.point) > 0.00001 && Point.dist(intersect, street.node2.point) > 0.00001){
+					if(intersect != null && Point.dist(oldnode.getPoint(), intersect) < min
+							&& Point.dist(intersect, street.node1.getPoint()) > 0.00001 && Point.dist(intersect, street.node2.getPoint()) > 0.00001){
 						intersecting = street;
 						intersection = intersect;
-						min = Point.dist(oldnode.point, intersect);
+						min = Point.dist(oldnode.getPoint(), intersect);
 					}
 				}
 			}
@@ -194,6 +195,7 @@ public class Lot extends City_part implements Serializable{
 	 * @param settings the settings
 	 */
 	public void choose_and_place(Lut lut,Settings settings) {
+		Collections.shuffle(lut.getBuildings());
 		for(Building b: lut.getBuildings()){
 			
 			Building building = b.copy();

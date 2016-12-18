@@ -10,8 +10,8 @@ public class NewBehaviourScript : MonoBehaviour
     float xSpeed = 2f;
     float ySpeed = 2f;
     float zoomSpd = 2f;
-    float maxzoom = 1f;
-    float minzoom = 100;
+    float maxzoom = 50f;
+    float minzoom = 300;
     public void Start()
     {
 
@@ -21,11 +21,11 @@ public class NewBehaviourScript : MonoBehaviour
     {
         if (target)
         {
-            float x = Input.GetAxis("Horizontal") * xSpeed * 0.02f;
-            float y = Input.GetAxis("Vertical") * ySpeed * 0.02f;
+            float x = Input.GetAxis("Horizontal") * xSpeed;
+            float y = Input.GetAxis("Vertical") * ySpeed ;
 
-            float distance =  Input.GetAxis("Fire1") * zoomSpd * 0.02f;
-            distance -= Input.GetAxis("Fire2") * zoomSpd * 0.02f;
+            float distance =  Input.GetAxis("Fire1") * zoomSpd;
+            distance -= Input.GetAxis("Fire2") * zoomSpd ;
             float zoom = transform.position.y + distance;
             if (zoom > minzoom)
                 zoom = minzoom;

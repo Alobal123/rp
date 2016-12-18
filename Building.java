@@ -26,9 +26,9 @@ public class Building implements Serializable{
 	private String name;
 	
 	/** Bod uprostøed budovy. */
-	Point center;
+	public Point center;
 	
-	double angle = 0;
+	public double angle = 0;
 	
 	/**
 	 * Konstruktor
@@ -41,6 +41,16 @@ public class Building implements Serializable{
 		this.points = points;
 		place(new Point(0, 0));
 	}
+	public Building (double front_length, double side_length, String name){
+		ArrayList<Point> points = new ArrayList<>();
+		points.add(new Point(0, 0));
+		points.add(new Point(front_length, 0));
+		points.add(new Point(front_length, side_length));
+		points.add(new Point(0, side_length));
+		this.points = points;
+		this.name = name;
+		place(new Point(0, 0));
+	}
 	
 	/**
 	 * Deafualtní konstruktor - vytvoøí malou ètvercovou budovu.
@@ -48,9 +58,9 @@ public class Building implements Serializable{
 	public Building() {
 		ArrayList<Point> points = new ArrayList<>();
 		points.add(new Point(0, 0));
-		points.add(new Point(0, 0.05));
-		points.add(new Point(0.05, 0.05));
-		points.add(new Point(0.05, 0));
+		points.add(new Point(10.0, 0));
+		points.add(new Point(10.0, 10.0));
+		points.add(new Point(0, 10));
 		this.points = points;
 		this.setName("New Building");
 		place(new Point(0, 0));
@@ -140,10 +150,10 @@ public class Building implements Serializable{
 		double ratio1 = (street.length/2 - small.length/2)/street.length;	
 		double ratio2 = (street.length/2 + small.length/2)/street.length;
 		if(node1){
-			place(new Point(ratio1*street.node1.point.getX() + ratio2*street.node2.point.getX(), ratio1*street.node1.point.getY() + ratio2*street.node2.point.getY()));
+			place(new Point(ratio1*street.node1.getPoint().getX() + ratio2*street.node2.getPoint().getX(), ratio1*street.node1.getPoint().getY() + ratio2*street.node2.getPoint().getY()));
 		}
 		else{
-			place(new Point(ratio2*street.node1.point.getX() + ratio1*street.node2.point.getX(), ratio2*street.node1.point.getY() + ratio1*street.node2.point.getY()));
+			place(new Point(ratio2*street.node1.getPoint().getX() + ratio1*street.node2.getPoint().getX(), ratio2*street.node1.getPoint().getY() + ratio1*street.node2.getPoint().getY()));
 		}
 		small = borders.get(0);
 		if(rotation){
@@ -154,11 +164,11 @@ public class Building implements Serializable{
 		double angle = Math.min(Street.get_angle(street, small), (360+180-Street.get_angle(street, small))%360);
 		rotate(angle);
 		this.angle += angle;	
-		move_away_from_street(street, settings.street_width/2 + 0.001, minus);
+		move_away_from_street(street, settings.street_width/2 + settings.street_offset, minus);
 		boolean succes = control(cp,street,node1);
 		if(succes){
 			for(Street s: cp.streets){
-				if(s !=  street){
+				if(s !=  street && s.major != Street_type.lot_border){
 					move_away_from_street(s, settings.street_width/2, true);
 					succes = succes && control(cp,street,node1);
 					move_away_from_street(s, 2*settings.street_width/2, false);
@@ -213,9 +223,8 @@ public class Building implements Serializable{
 		double minus_one = 1;
 		if(minus)
 			minus_one = -1;
-		Point vector = new Point(street.node1.point.getX() - street.node2.point.getX(), street.node1.point.getY() - street.node2.point.getY());
+		Point vector = new Point(street.node1.getPoint().getX() - street.node2.getPoint().getX(), street.node1.getPoint().getY() - street.node2.getPoint().getY());
 		vector = new Point(minus_one*dist*-1*vector.getY()/vector.norm(), dist*minus_one*vector.getX()/vector.norm());
-		//System.out.println(vector);
 		for(Point p: placement){
 			p.setX(p.getX() + vector.getX());
 			p.setY(p.getY() + vector.getY());
@@ -238,7 +247,7 @@ public class Building implements Serializable{
 	 * @return the front length
 	 */
 	public double get_front_length(){
-		return borders.get(0).length;
+		return points.get(1).getX();
 	}
 	
 	/**
@@ -247,12 +256,12 @@ public class Building implements Serializable{
 	 * @return the side length
 	 */
 	public double get_side_length(){
-		return borders.get(1).length;
+		return points.get(2).getY();
 	}
 	
 	@Override
 	public String toString(){
-		return getName() + " " + points.get(0) + " " + points.get(1);
+		return getName() + " " + points.get(0) + " " + points.get(1) + " " + points.get(2);
 		
 	}
 

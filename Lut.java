@@ -3,7 +3,10 @@ package krabec.citysimulator;
 import java.awt.Color;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 
 /**
  * Zkratka za Land Use Type. Reprezentuje využití nìjaké èásti mìsta. 
@@ -15,7 +18,7 @@ public class Lut implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = -1015487939669366246L;
-
+	
 	static final Building default_building;
 	static{
 		ArrayList<Point> points = new ArrayList<>();
@@ -85,8 +88,9 @@ public class Lut implements Serializable{
 			
 		if(min_area==0)
 			min_area = 0.01;
-		min_area = Math.pow((Math.sqrt(min_area)+ settings.street_width/2),2);
-		this.minimal_lot_area = min_area*4;
+		min_area =  (Math.sqrt(min_area)+settings.street_offset +settings.street_width/2) * 
+					(Math.sqrt(min_area)+settings.street_offset +settings.street_width/2);
+		this.minimal_lot_area = min_area*2.5;
 	}
 	
 	/**

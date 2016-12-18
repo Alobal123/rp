@@ -18,13 +18,13 @@ public class Street implements Serializable
 	private static final long serialVersionUID = 8640165666271756086L;
 
 	/** První uzel ze kterého ulice vychází. */
-	Node node1;
+	public Node node1;
 	
 	/** Druhý uzel ze kterého ulice vychází. */
-	Node node2;
+	public Node node2;
 	
 	/** Udává, zda je ulice postavena, nebo jen naplánována. */
-	boolean built; 
+	public boolean built; 
 	
 	/** Zda je tato ulice hlavní, nebo vedlejší.*/
 	Street_type major;
@@ -33,7 +33,7 @@ public class Street implements Serializable
 	double traffic;
 	
 	/**  Délka ulice. */
-	double length;
+	public double length;
 	
 	/**
 	 * Konstruktor.
@@ -87,7 +87,7 @@ public class Street implements Serializable
 	 * @return Délka ulice
 	 */
 	double get_length(){
-		return Point.dist(node1.point, node2.point);
+		return Point.dist(node1.getPoint(), node2.getPoint());
 	}
  	
  	
@@ -101,13 +101,13 @@ public class Street implements Serializable
  	 */
  	static double get_angle (Street s1, Street s2){
 		 	if(s1.node1 == s2.node1 || s1.node2 == s2.node2){
-		 		Point v1 = s1.node1.point.minus(s1.node2.point);
-		 		Point v2 = s2.node1.point.minus(s2.node2.point);
+		 		Point v1 = s1.node1.getPoint().minus(s1.node2.getPoint());
+		 		Point v2 = s2.node1.getPoint().minus(s2.node2.getPoint());
 		 		return (360 + Point.angleBetween(v1, v2))%360;
 		 	}
 		 	else{
-		 		Point v1 = s1.node1.point.minus(s1.node2.point);
-		 		Point v2 = s2.node2.point.minus(s2.node1.point);
+		 		Point v1 = s1.node1.getPoint().minus(s1.node2.getPoint());
+		 		Point v2 = s2.node2.getPoint().minus(s2.node1.getPoint());
 		 		return (360 + Point.angleBetween(v1, v2))%360;
 		 	}
 	 }
@@ -135,14 +135,14 @@ public class Street implements Serializable
 	 */
 	static Point getIntersection(Street s1,Street s2){
 		double i_x,i_y;
-		double p0_x =  s1.node2.point.getX();
-		double p0_y =  s1.node2.point.getY();
-		double p1_x =  s1.node1.point.getX();
-		double p1_y =  s1.node1.point.getY();
-		double p2_x =  s2.node2.point.getX();
-		double p2_y =  s2.node2.point.getY();
-		double p3_x =  s2.node1.point.getX();
-		double p3_y =  s2.node1.point.getY();
+		double p0_x =  s1.node2.getPoint().getX();
+		double p0_y =  s1.node2.getPoint().getY();
+		double p1_x =  s1.node1.getPoint().getX();
+		double p1_y =  s1.node1.getPoint().getY();
+		double p2_x =  s2.node2.getPoint().getX();
+		double p2_y =  s2.node2.getPoint().getY();
+		double p3_x =  s2.node1.getPoint().getX();
+		double p3_y =  s2.node1.getPoint().getY();
 		double s1_x, s1_y, s2_x, s2_y;
 		s1_x = p1_x - p0_x;
 		s1_y = p1_y - p0_y;
@@ -166,13 +166,13 @@ public class Street implements Serializable
 	 * @param node Uzel
 	 * @return Úhel
 	 */
-	double get_absolute_angle(Node node){
+	public double get_absolute_angle(Node node){
 		double angle = 0;
 		if(node == node1){
-			angle = Point.angleBetween(this.node2.point.minus(this.node1.point), new Point(0,1));
+			angle = Point.angleBetween(this.node2.getPoint().minus(this.node1.getPoint()), new Point(0,1));
 		}
 		else if (node == node2){
-			angle = Point.angleBetween(this.node1.point.minus(this.node2.point), new Point(0,1));
+			angle = Point.angleBetween(this.node1.getPoint().minus(this.node2.getPoint()), new Point(0,1));
 		}
 		
 		return ( 360 + angle) % 360;
@@ -184,7 +184,7 @@ public class Street implements Serializable
  	 */
  	@Override
 	public String toString(){
-		return "Street from (" + node1.point  +" to "  + node2.point;
+		return "Street from (" + node1.getPoint()  +" to "  + node2.getPoint();
 		 
 	 }
 }

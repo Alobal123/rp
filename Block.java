@@ -42,7 +42,7 @@ public class Block extends City_part implements Serializable{
 		
 		ArrayList<Node> new_lot_borders = new ArrayList<>();
 		for(Node n: lot_borders){
-			Node newnode = new Node(n.point.getX(), n.point.getY(), n.major,true);
+			Node newnode = new Node(n.getPoint().getX(), n.getPoint().getY(), n.major,true);
 			new_lot_borders.add(newnode);
 		}
 		
@@ -111,7 +111,7 @@ public class Block extends City_part implements Serializable{
 	 */
 	public Node findnode(Node node,ArrayList<Node> nodes){
 		for(Node n: nodes){
-			if(Point.dist(n.point, node.point)<0.0000001)
+			if(Point.dist(n.getPoint(), node.getPoint())<0.00001)
 				return n;
 		}
 		return null;
@@ -142,8 +142,8 @@ public class Block extends City_part implements Serializable{
 		
 		for (Street street : streets) {
 			street.built = true;
-			street.node1.built =true;
-			street.node2.built =true;
+			street.node1.setBuilt(true);
+			street.node2.setBuilt(true);
 		}
 	}
 	
@@ -265,7 +265,7 @@ public class Block extends City_part implements Serializable{
 		HashSet<Street> to_remove = new HashSet<>();
 		for(Node n: lot_borders){
 			for(Street s: n.streets){
-				Node middle = new Node((s.node1.point.getX() + s.node2.point.getX())/2, (s.node1.point.getY() + s.node2.point.getY())/2, null);
+				Node middle = new Node((s.node1.getPoint().getX() + s.node2.getPoint().getX())/2, (s.node1.getPoint().getY() + s.node2.getPoint().getY())/2, null);
 				if(check_if_inside(middle) == Street_Result.fail)
 					to_remove.add(s);
 			}
@@ -376,7 +376,7 @@ public class Block extends City_part implements Serializable{
 	private void divide_until(double minarea){
 		Lot lot = find_big_lot(minarea);
 		int i =0;
-		while(i<50 && lot != null){
+		while(i<100 && lot != null){
 			lot.divide(this);
 			find_lots();
 			lot = find_big_lot(minarea);

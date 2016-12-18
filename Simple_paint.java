@@ -15,8 +15,8 @@ public class Simple_paint implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = -3071466066619399273L;
-	int size = 5000;
-	int magn = 400; 
+	public int size = 2000;
+	double magn = 3; 
 	City_part current_part = null;
 	City_part current_block =null;
 	private Street_Network network;
@@ -36,7 +36,6 @@ public class Simple_paint implements Serializable{
 			for (int j = 0; j < q.contained_city_parts.size(); j++) {
 				Block b = (Block) q.contained_city_parts.get(j);
 				
-				//color_part(b, g, rnd, true, null);
 				
 				if(b.lut != null && b.built){
 					for (int k = 0; k < b.contained_city_parts.size(); k++) {
@@ -47,7 +46,7 @@ public class Simple_paint implements Serializable{
 		}
 		for (int i = 0; i < network.nodes.size(); i++) {
 			Node n = network.nodes.get(i);
-			if(n.built){
+			if(n.isBuilt()){
 				draw_node(n, g, Color.white);
 			}
 			for (int j = 0; j < n.streets.size(); j++) {
@@ -111,15 +110,15 @@ public class Simple_paint implements Serializable{
 	
 	private void draw_node(Node n, Graphics g, Color color){
 		g.setColor(color);
-		g.fillOval((int)(n.point.getX()*magn/2)+size/2-3, (int)(-1*n.point.getY()*magn/2)+size/2-3,6, 6);
+		g.fillOval((int)(n.getPoint().getX()*magn/2)+size/2-3, (int)(-1*n.getPoint().getY()*magn/2)+size/2-3,6, 6);
 	}
 	
 	private void draw_street(Street s, Graphics g,Color color,Random rnd){
 		
-		int x1 = (int)(s.node1.point.getX()*magn/2) + size/2;
-		int y1 = (int)(s.node1.point.getY()*-magn/2) + size/2;
-		int x2 = (int)(s.node2.point.getX()*magn/2) + size/2;
-		int y2 = (int)(s.node2.point.getY()*-magn/2) + size/2;
+		int x1 = (int)(s.node1.getPoint().getX()*magn/2) + size/2;
+		int y1 = (int)(s.node1.getPoint().getY()*-magn/2) + size/2;
+		int x2 = (int)(s.node2.getPoint().getX()*magn/2) + size/2;
+		int y2 = (int)(s.node2.getPoint().getY()*-magn/2) + size/2;
 		
 		if(s.built){
 			if(color == null){
@@ -133,7 +132,7 @@ public class Simple_paint implements Serializable{
 			g.setColor(color);
 			g.drawLine(x1, y1, x2, y2);
 		}
-	}
+	}	
 	
 	private void draw_building(Building building,Graphics g){
 		int [] xs = new int [2*building.borders.size()];
@@ -149,11 +148,19 @@ public class Simple_paint implements Serializable{
 	}
 
 	public void zoom_in(){
-		this.magn +=50;
+		if(this.magn<=1.1)
+			this.magn = this.magn * 1.25;
+		else
+			this.magn +=0.5;
 		
 	}
 	public void zoom_out(){
-		this.magn -=50;
+
+		if(this.magn <= 1.1)
+			this.magn = this.magn*0.75;
+		else
+			this.magn -=0.5;
+
 	}
 	public City_part find_part(int x, int y) {
 		this.current_part = null;
@@ -161,37 +168,23 @@ public class Simple_paint implements Serializable{
 		double x2 = (x - size/2.0)/(magn/2.0);
 		double y2 = (y - size/2.0)/(magn/-2.0);
 		Node trynode = new Node(x2, y2, Street_type.lot_border);
-		int qr = 0;
-		int br = 0;
-		int lr = 0;
-		Collections.shuffle(network.quarters);
+
 		for (Quarter q: network.quarters){
 				if(q.check_if_inside(trynode) == Street_Result.not_altered){
 					this.current_block = q;
-					qr++;
+
 					for(City_part block: q.contained_city_parts){
 						if(block.check_if_inside(trynode) == Street_Result.not_altered){
-							br++;
+
 							this.current_block = block;
-							for(City_part lot:block.contained_city_parts){
-								if(lot.check_if_inside(trynode) == Street_Result.not_altered){
-									lr++;
-									this.current_part = lot;
-								}
+
 									
-							}
+							
 							
 						}
 						
 					}
 				}
-		}
-		if(current_block != null){
-			/*System.out.println(current_block.contained_city_parts.size());
-			System.out.println("Quarters "+qr);
-			System.out.println("Blocks "+br);
-			System.out.println("Lots "+lr);
-			System.out.println();*/
 		}
 		return this.current_block;
 		
@@ -222,12 +215,12 @@ public class Simple_paint implements Serializable{
 		double y2 = (y - size/2.0)/(magn/-2.0);
 		Node trynode = new Node(x2, y2, Street_type.lot_border);
 		
-		Point closest = Point.get_closest(trynode.point, points);
-		if(closest != null && Point.dist(closest, trynode.point) < 0.1){
+		Point closest = Point.get_closest(trynode.getPoint(), points);
+		if(closest != null && Point.dist(closest, trynode.getPoint()) < 0.1){
 			points.remove(closest);
 		}
 		else
-			points.add(trynode.point);
+			points.add(trynode.getPoint());
 	}
 
 	public City getCity() {

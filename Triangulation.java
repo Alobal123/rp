@@ -304,7 +304,7 @@ public class Triangulation implements Serializable{
 	
 	private static Node find_node(XYZ xyz,List<Node> nodes){
 		for(Node n: nodes){
-			if(Math.abs(xyz.x - n.point.getX()) < 0.00001 && Math.abs(xyz.y - n.point.getY()) < 0.00001)
+			if(Math.abs(xyz.x - n.getPoint().getX()) < 0.00001 && Math.abs(xyz.y - n.getPoint().getY()) < 0.00001)
 				return n;
 		}
 		return null;
@@ -320,7 +320,7 @@ public class Triangulation implements Serializable{
 		XYZ[] points = new XYZ[ nv +3];
 	
 		for (int i=0; i<nv; i++){
-			points[i] = new XYZ( nodes.get(i).point.getX(), nodes.get(i).point.getY(), 0.0 );
+			points[i] = new XYZ( nodes.get(i).getPoint().getX(), nodes.get(i).getPoint().getY(), 0.0 );
 		}
 		
 		points[nv+0] = new XYZ(0,0,0);
@@ -346,9 +346,7 @@ public class Triangulation implements Serializable{
 
 			Triangle t = new Triangle();
 			
-			//System.out.println("----------");
 			Street s = new Street(n1, n2, Street_type.lot_border,true);
-			//System.out.println(s);
 			Street street;
 			if((street = street_exists(n1,n2)) == null){
 				n1.streets.add(s);
@@ -360,7 +358,6 @@ public class Triangulation implements Serializable{
 			}
 			
 			s = new Street(n1, n3, Street_type.lot_border,true);
-			//System.out.println(s);
 			if((street = street_exists(n1,n3)) == null){
 				n1.streets.add(s);
 				n3.streets.add(s);
@@ -370,7 +367,6 @@ public class Triangulation implements Serializable{
 				t.s2 = street;
 			}
 			s = new Street(n2, n3, Street_type.lot_border,true);
-			//System.out.println(s);
 			if((street = street_exists(n2,n3)) == null){
 				n2.streets.add(s);
 				n3.streets.add(s);

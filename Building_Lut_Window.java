@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
 import krabec.citysimulator.Building;
@@ -23,7 +24,6 @@ public class Building_Lut_Window extends JDialog {
 	 */
 	private static final long serialVersionUID = -6768450950957361766L;
 
-	private final JPanel contentPanel = new JPanel();
 
 	ArrayList<Lut> luts;
 	Building building;
@@ -32,19 +32,26 @@ public class Building_Lut_Window extends JDialog {
 	 */
 	public Building_Lut_Window(ArrayList<Lut> luts, Building building) {
 		this.setTitle("Building Use");
+		//this.setResizable(false);
 		Building_Lut_Window thiswindow = this;
-		setBounds(100, 100, 450, 300);
+		setBounds(150, 100, 300, 600);
 		getContentPane().setLayout(new BorderLayout());
-		contentPanel.setLayout(new FlowLayout());
-		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-		JPanel panel = new JPanel();
+		
+		JPanel panel = new Panelscrollable();
 		panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-		getContentPane().add(panel, BorderLayout.CENTER);
+		
 		panel.setLayout(new GridLayout(0, 1, 0, 10));
 		for(Lut lut: luts){
 			panel.add(new Building_Lut_panel(lut, building));
 		}
 		
+		JScrollPane scrollPane = new JScrollPane();
+		getContentPane().add(scrollPane, BorderLayout.CENTER);
+		scrollPane.setVerticalScrollBarPolicy(
+				   JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
+		scrollPane.setHorizontalScrollBarPolicy(
+				   JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); 
+		scrollPane.setViewportView(panel);
 		
 		{
 			JPanel buttonPane = new JPanel();

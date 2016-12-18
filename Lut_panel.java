@@ -2,6 +2,7 @@ package krabec.citysimulator.ui;
 
 import javax.swing.JPanel;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 
@@ -41,7 +42,7 @@ public class Lut_panel extends JPanel {
 		JButton btnNewButton = new JButton("                       ");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				 Color new_color = JColorChooser.showDialog(null, "JColorChooser Sample", lut.color);
+				 Color new_color = JColorChooser.showDialog(parent, "JColorChooser Sample", lut.color);
 				 lut.color = new_color;
 				 btnNewButton.setBackground(new_color);
 			}
@@ -76,17 +77,22 @@ public class Lut_panel extends JPanel {
 				  private void update_weight(){
 					  try{
 						  double n = Double.parseDouble(textField.getText());
-						  lut.wanted_percentage = n;
+						  if(n>= 0 && n<= 1){
+							  lut.wanted_percentage = n;
+						  }
+						  else{
+							  JOptionPane.showMessageDialog(null, "Has to be a number between 0 and 1");
+						  }
 					  }
 					  catch(NumberFormatException e){
-						  
+						  if(!textField.getText().equals(""))
+							  JOptionPane.showMessageDialog(null, "Has to be a number between 0 and 1");
+						  lut.wanted_percentage = 0;
 					  }
 				  }
 				   
 			});
-		
-		
-		
+
 		JButton btnNewButton_1 = new JButton("Edit");
 		panel.add(btnNewButton_1);
 		
@@ -99,7 +105,6 @@ public class Lut_panel extends JPanel {
 							Lut_edit lut_edit = new Lut_edit(lut,thispanel);
 							lut_edit.setVisible(true);
 							lut_edit.setAlwaysOnTop(true);
-							lut_edit.pack();
 							
 						} catch (Exception e) {
 							e.printStackTrace();

@@ -1,4 +1,4 @@
-	package krabec.citysimulator.ui;
+package krabec.citysimulator.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -15,6 +15,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.StreamCorruptedException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JFrame;
@@ -22,6 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
 import javax.swing.Timer;
@@ -34,23 +36,20 @@ import krabec.citysimulator.Crossroad;
 import krabec.citysimulator.Lut;
 import krabec.citysimulator.Mapping;
 import krabec.citysimulator.Node;
-import krabec.citysimulator.Point;
 import krabec.citysimulator.Settings;
 import krabec.citysimulator.Simple_paint;
-import krabec.citysimulator.Socket_Writer;
+import krabec.citysimulator.network.Socket_Manager;
 import krabec.citysimulator.Street;
 import krabec.citysimulator.Street_Network;
 import krabec.citysimulator.Street_type;
 import krabec.citysimulator.Valuation;
 import krabec.citysimulator.Valuation_Types;
-
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-
 import javax.swing.JCheckBox;
 
 public class City_window extends JFrame {
@@ -64,11 +63,13 @@ public class City_window extends JFrame {
 	public boolean paused = true;
 	boolean started = false;
 	Simple_paint simple_paint;
-	Socket_Writer socket_writer;
 	JButton start_button;
 	JCheckBox growth_box;
 	JCheckBox center_box;
-	public Timer timer = new Timer(100, new ActionListener() {
+	
+	Socket_Manager socket_manager;
+	
+	public Timer timer = new Timer(10, new ActionListener() {
 		
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
@@ -83,7 +84,6 @@ public class City_window extends JFrame {
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
-		City city;
 		@Override
 		public void paintComponent(Graphics g){
 			super.paintComponent(g);
@@ -92,7 +92,7 @@ public class City_window extends JFrame {
 		
 		@Override
 		public Dimension getPreferredSize(){
-			return new Dimension(5000,5000);
+			return new Dimension(2000,2000);
 			
 		}
 		@Override
@@ -109,7 +109,6 @@ public class City_window extends JFrame {
 		}
 		@Override
 		public boolean getScrollableTracksViewportWidth() {
-			// TODO Auto-generated method stub
 			return false;
 		}
 		@Override
@@ -142,7 +141,9 @@ public class City_window extends JFrame {
 		this.setExtendedState(this.getExtendedState() | JFrame.MAXIMIZED_BOTH);
 		City_window thiswindow = this;
 		this.city = create_city();
-		
+		simple_paint = new Simple_paint(city);
+		this.socket_manager = new Socket_Manager(city);
+
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 822, 432);
 		
@@ -162,40 +163,39 @@ public class City_window extends JFrame {
 				  FileInputStream fis = new FileInputStream(file);
 					ObjectInputStream ois = new ObjectInputStream(fis);
 					City result = (City) ois.readObject();
-					city = result;
-					panel.city = result;
-					simple_paint = new Simple_paint(city);
-					socket_writer.setNetwork(city.network);
+					change_city(result);
 					thiswindow.repaint();
 					ois.close();
 				  }
+				  catch(StreamCorruptedException e){
+					  JOptionPane.showMessageDialog(thiswindow, "Wrong type of file! Loading failed!");
+				  }
+				
 				catch (FileNotFoundException e) {
-					e.printStackTrace();
+					JOptionPane.showMessageDialog(thiswindow, "Loading failed!");
 				} catch (IOException e) {
-					e.printStackTrace();
+					JOptionPane.showMessageDialog(thiswindow, "Loading failed!");
 				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
+					JOptionPane.showMessageDialog(thiswindow, "Loading failed!");
 				}
-				  
-				}
+			}
 			}
 		});
 		
-		JMenuItem mntmNewMenuItem_1 = new JMenuItem("New Simulation");
+		JMenuItem mntmNewMenuItem_1 = new JMenuItem("New Simulation (Default Settings)");
 		mntmNewMenuItem_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				city = create_city();
-				simple_paint.setCity(city);
+				change_city(create_city());
 				panel.repaint();
 			}
 		});
 		mnFile.add(mntmNewMenuItem_1);
 		
-		JMenuItem mntmNewMenuItem_2 = new JMenuItem("New City");
+		JMenuItem mntmNewMenuItem_2 = new JMenuItem("New City (Current Settings)");
 		mntmNewMenuItem_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				city.network = new Street_Network(city.network.all_crossroads,city.getSettings());
-				simple_paint.setCity(city);
+				change_city(city);
 				panel.repaint();
 			}
 		});
@@ -234,7 +234,7 @@ public class City_window extends JFrame {
 				  File file = fileChooser.getSelectedFile();
 				  file = (new File(file.getAbsolutePath() + ".png"));
 				  try{
-					  BufferedImage im = new BufferedImage(5000,5000,1);
+					  BufferedImage im = new BufferedImage(simple_paint.size,simple_paint.size,1);
 					  simple_paint.paint(im.getGraphics(), growth_box.isSelected(), center_box.isSelected());
 					  ImageIO.write(im, "PNG", file);
 				  }
@@ -350,13 +350,7 @@ public class City_window extends JFrame {
 		JButton button3D = new JButton("Show in 3D");
 		button3D.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				try{
-					if(socket_writer != null)
-						socket_writer.Send_city();
-				}
-				catch(IOException e){
-					
-				}
+					socket_manager.Send();
 			}
 		});
 		panel_2.add(button3D);
@@ -436,7 +430,7 @@ public class City_window extends JFrame {
 		scrollPane.setViewportBorder(null);
 		
 		scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum());
-		scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getValue() / 2+2100);
+		scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getValue() / 2+550);
 		scrollPane.getHorizontalScrollBar().setValue(scrollPane.getHorizontalScrollBar().getMaximum());
 		scrollPane.getHorizontalScrollBar().setValue(scrollPane.getHorizontalScrollBar().getValue() / 2 -800);
 		
@@ -468,7 +462,6 @@ public class City_window extends JFrame {
 			}
 		});
 		getContentPane().add(scrollPane, BorderLayout.CENTER);
-		panel.city = this.city;
 
 	}
 
@@ -504,68 +497,23 @@ public class City_window extends JFrame {
 		
 		for (Crossroad c: all_crossroads) {
 			c.get_viable_crossroads(all_crossroads);
-			
 		}
 		Street_Network network = new Street_Network(all_crossroads,new Settings());
 		city = new City(network);
-		simple_paint = new Simple_paint(city);
-		try {
-			socket_writer = new Socket_Writer(8787, city.network);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		simple_paint.setCity(city);
 		
-		ArrayList<Point> points = new ArrayList<>();
-		points.add(new Point(0, 0));
-		points.add(new Point(0.1, 0));
-		points.add(new Point(0.1, 0.08));
-		points.add(new Point(0, 0.08));
-		Building big_factory = new Building(points,"Big Factory");
+		Building big_factory = new Building(10,16,"Big Factory");
 		
-		points = new ArrayList<>();
-		points.add(new Point(0, 0));
-		points.add(new Point(0.07, 0));
-		points.add(new Point(0.07, 0.05));
-		points.add(new Point(0, 0.05));
-		Building small_factory = new Building(points,"Small Factory");
+		Building small_factory = new Building(9,14,"Small Factory");
 		
-		points = new ArrayList<>();
-		points.add(new Point(0, 0));
-		points.add(new Point(0.04, 0));
-		points.add(new Point(0.04, 0.05));
-		points.add(new Point(0, 0.05));
-		Building office = new Building(points,"Office");
+		Building office = new Building(10,8,"Office");
 		
-		points = new ArrayList<>();
-		points.add(new Point(0, 0));
-		points.add(new Point(0.03, 0));
-		points.add(new Point(0.03, 0.04));
-		points.add(new Point(0, 0.04));
-		Building house = new Building(points,"House");
+		Building house = new Building(6,8,"House");
 		
-		points = new ArrayList<>();
-		points.add(new Point(0, 0));
-		points.add(new Point(0.07, 0));
-		points.add(new Point(0.07, 0.04));
-		points.add(new Point(0, 0.04));
-		Building block_of_flats = new Building(points,"Block of flats");
+		Building block_of_flats = new Building(14,8,"Block of flats");
+
+		Building park = new Building(12,14,"Park");
 		
-		points = new ArrayList<>();
-		points.add(new Point(0, 0));
-		points.add(new Point(0.07, 0));
-		points.add(new Point(0.07, 0.08));
-		points.add(new Point(0, 0.08));
-		Building park = new Building(points,"Park");
-		
-		points = new ArrayList<>();
-		points.add(new Point(0, 0));
-		points.add(new Point(0.07, 0));
-		points.add(new Point(0.07, 0.05));
-		points.add(new Point(0, 0.05));
-		Building public_building = new Building(points,"Public Building");
-		
+		Building public_building = new Building(10,10,"Public Building");
 		
 		Lut low_d_residential =  new Lut("Low density residential", 1, 0.4,Color.blue,city.getSettings());
 		low_d_residential.add_val(new Valuation((float) 0.45,Valuation_Types.traffic,Mapping.linear_down,0,50));
@@ -642,5 +590,10 @@ public class City_window extends JFrame {
 		return city;
 	}
 
+	private void change_city(City city){
+		this.city = city;
+		simple_paint = new Simple_paint(city);
+		socket_manager.setCity(city);
+	}
 	
 }

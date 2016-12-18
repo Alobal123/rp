@@ -6,11 +6,10 @@ import java.util.Collections;
 import java.util.List;
 
 
-// TODO: Auto-generated Javadoc
 /**
  * Tøída Crossroad reprezentuje køižovatku. Je daná seznamem úhlù mezi ulicemi a urèuje, z jaké køižovatky lze pøerùst v jakou.
  */
-public class Crossroad implements Serializable {
+public class Crossroad implements Serializable,Comparable<Crossroad> {
 	
 	/**
 	 * 
@@ -22,14 +21,10 @@ public class Crossroad implements Serializable {
 	 * Seznam všech køižovatek, které mohou vzniknout z této køižovatky pøidáním jedné ulice.
 	 */
 	public List<Crossroad> viable_crossroads = new ArrayList<>();
-	
-	
 	/**
 	 * Seznam úhlù mezi ulicemi, zadaný ve stupních a seøazených ve smìru hodinových ruèièek.
 	 */
 	public List<Double> angles = new ArrayList<>();
-	
-	
 	/**
 	 * Konstruktor.
 	 *
@@ -54,9 +49,7 @@ public class Crossroad implements Serializable {
 	 * @return Seznam køižovatek
 	 */
 	public void get_viable_crossroads(List<Crossroad> all_crossroads){
-		
 		for(Crossroad c : all_crossroads){
-			
 			if (c.getNumber_of_roads() == this.getNumber_of_roads() + 1){
 					int jump = 0;
 					int matching_angles = 0;
@@ -78,7 +71,6 @@ public class Crossroad implements Serializable {
 					
 			}
 		}
-		
 	}
 	
 	/**
@@ -103,12 +95,14 @@ public class Crossroad implements Serializable {
 	
 	@Override
 	public String toString(){
-		StringBuilder sb = new StringBuilder("Crossroad: ");
-		for(Double d : angles){
-			sb.append(d + ", ");
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < angles.size(); i++) {
+			sb.append(angles.get(i));
+			if(i!= angles.size()-1)
+				sb.append(" , ");
 		}
+		
 		return sb.toString();
-
 	}
 	
 	/** 
@@ -127,8 +121,6 @@ public class Crossroad implements Serializable {
 					}
 					if(same_angles == getNumber_of_roads())
 						return true;
-					
-				
 			}
 		}
 		return false;
@@ -184,11 +176,30 @@ public class Crossroad implements Serializable {
 			if(c.equals(newcrossroad))
 				return c;
 		}
-		
 		return null;
 	}
 	public int getNumber_of_roads() {
 		return number_of_roads;
+	}
+	public static Crossroad Read_crossroad(String line){
+		Crossroad crossroad =  new Crossroad();
+		String[] split = line.split(",");
+		for (int i = 0; i < split.length; i++) {
+			try{
+				double d = Double.parseDouble(split[i]);
+				if(d>0)
+					crossroad.angles.add(d);
+			}
+			catch(NumberFormatException e){
+				return null;
+			}	
+		}
+		crossroad.number_of_roads = crossroad.angles.size();
+		return crossroad;
+	}
+	@Override
+	public int compareTo(Crossroad o) {
+		return Integer.compare(this.number_of_roads, o.number_of_roads);
 	}
 
 	

@@ -2,6 +2,7 @@ package krabec.citysimulator.ui;
 
 import javax.swing.JPanel;
 
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.GridLayout;
 import javax.swing.JTextField;
@@ -11,6 +12,7 @@ import javax.swing.event.DocumentListener;
 import krabec.citysimulator.Valuation;
 
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -23,6 +25,13 @@ public class Val_panel extends JPanel {
 	JLabel type_label;
 	JLabel type_label2;
 	private JTextField weight_field;
+	
+	
+	@Override
+	public  Dimension getPreferredSize(){
+		return new Dimension(400, 30);
+	}
+	
 	/**
 	 * Create the panel.
 	 */
@@ -58,7 +67,12 @@ public class Val_panel extends JPanel {
 			  private void update_weight(){
 				  try{
 					  float n = Float.parseFloat(weight_field.getText());
-					  valuation.setWeight(n);
+					  if(n>= 0 && n<= 1){
+						  valuation.setWeight(n);
+					  }
+					  else{
+						  JOptionPane.showMessageDialog(null, "Has to be a number between 0 and 1");
+					  }
 				  }
 				  catch(NumberFormatException e){
 					  

@@ -10,12 +10,9 @@ import java.awt.event.WindowEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.Rectangle;
 import javax.swing.JScrollPane;
-import javax.swing.Scrollable;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
@@ -30,9 +27,7 @@ public class Lut_window extends JDialog {
 	ArrayList<Lut> luts;
 	City_window city_window;
 	JPanel panel;
-	/**
-	 * Create the dialog.
-	 */
+
 	public Lut_window(ArrayList<Lut> luts,City_window city_window) {
 		setResizable(false);
 		this.setTitle("Land Use Types");
@@ -48,47 +43,8 @@ public class Lut_window extends JDialog {
 		this.city_window = city_window;
 		Lut_window thiswindow = this;
 		city_window.setEnabled(false);
-		setBounds(100, 100, 513, 572);
+		setBounds(200, 100, 525, 525);
 		getContentPane().setLayout(new BorderLayout(0, 0));
-		
-		class Panelscrollable extends JPanel implements Scrollable{
-
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public Dimension getPreferredScrollableViewportSize() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
-				// TODO Auto-generated method stub
-				return 0;
-			}
-
-			@Override
-			public boolean getScrollableTracksViewportHeight() {
-				// TODO Auto-generated method stub
-				return false;
-			}
-
-			@Override
-			public boolean getScrollableTracksViewportWidth() {
-				// TODO Auto-generated method stub
-				return false;
-			}
-
-			@Override
-			public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
-				// TODO Auto-generated method stub
-				return 0;
-			}
-			
-		}
 		
 		panel = new Panelscrollable();
 		panel.setLayout(new GridLayout(0, 1, 0, 0));
@@ -109,7 +65,6 @@ public class Lut_window extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				panel.add(new Lut_panel(new Lut("New Lut",1,0,Color.black,city_window.city.getSettings()),thiswindow));
-				//panel.add(new_lut_button);
 				panel.updateUI();
 			}
 		});
@@ -134,13 +89,14 @@ public class Lut_window extends JDialog {
 		}
 		{
 			
-			
 			JScrollPane scrollPane = new JScrollPane();
 			panel_1.add(scrollPane, BorderLayout.CENTER);
+			scrollPane.setVerticalScrollBarPolicy(
+					   JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
+			scrollPane.setHorizontalScrollBarPolicy(
+					   JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); 
 			scrollPane.setViewportView(panel);
-			{
-				scrollPane.setViewportView(panel);
-			}
+
 			{
 				JPanel panel_2 = new JPanel();
 				scrollPane.setColumnHeaderView(panel_2);

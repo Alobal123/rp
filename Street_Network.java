@@ -35,9 +35,9 @@ public class Street_Network implements Serializable{
 	public List<Crossroad> all_crossroads;
 	
 	/** Seznam vöech ËtvrtÌ ve mÏstÏ. */
-	List<Quarter> quarters = new ArrayList<>();
+	public List<Quarter> quarters = new ArrayList<>();
 	/** Seznam vöech uzl˘ v grafu ulic. */
-	List<Node> nodes;
+	public List<Node> nodes;
 	
 	static Random rnd = new Random();
 	
@@ -58,7 +58,7 @@ public class Street_Network implements Serializable{
 	
 	/** Seznam uzl˘, kterÈ se nÏjak˝m zp˘sobem zmÏnily. */
 	List<Node> changed_nodes;
-	Settings settings;
+	public Settings settings;
 	
 	/**
 	 * Konstruktor 
@@ -82,7 +82,7 @@ public class Street_Network implements Serializable{
 		node1.crossroad = Street_Network.end_of_road;
 		node1.angle = 270;
 		
-		Node node2 = new Node(-0.5, 0, Street_type.major);
+		Node node2 = new Node(-50, 0, Street_type.major);
 		nodes.add(node2);
 		node2.crossroad = Street_Network.end_of_road;
 		node2.angle = 90;
@@ -204,7 +204,7 @@ public class Street_Network implements Serializable{
 	    
 	    double distSum = 0;
 		for (int i = 0; i < to_grow_nodes.size(); i++) {
-			distribution[i] = Math.pow(Math.E,-1*settings.focus_constant*Point.get_smallest_distance(to_grow_nodes.get(i).point, growthcenters));
+			distribution[i] = Math.pow(Math.E,-1*settings.focus_constant*Point.get_smallest_distance(to_grow_nodes.get(i).getPoint(), growthcenters));
 			if(to_grow_nodes.get(i).streets.size() == 2)
 				distribution[i]+=0.5;
 			distSum +=distribution[i];
@@ -275,7 +275,7 @@ public class Street_Network implements Serializable{
 						length -= settings.minor_prolongation;
 					double dx = Math.sin(angle * Math.PI / 180) * length;
 					double dy = Math.cos(angle * Math.PI / 180) * length;
-					current_new_node.point = new Point(oldnode.point.getX() + dx, oldnode.point.getY() + dy);
+					current_new_node.setPoint(new Point(oldnode.getPoint().getX() + dx, oldnode.getPoint().getY() + dy));
 				}
 				else if (result == Street_Result.fail){
 					revert_changes(oldnode, old_crossroad,major,to_grow_nodes);
@@ -349,7 +349,7 @@ public class Street_Network implements Serializable{
 			constant = settings.minor_close_node_constant;
 		for (Node n: nodes) {
 			
-			if(s.node1 != n && s.node2!=n && Point.dist(n.point, newnode.point) < constant){
+			if(s.node1 != n && s.node2!=n && Point.dist(n.getPoint(), newnode.getPoint()) < constant){
 				Street newstreet = new Street(oldnode, n, major);
 				
 				oldnode.streets.remove(s);
@@ -397,18 +397,18 @@ public class Street_Network implements Serializable{
 	private Street_Result check_for_crosses(Street newstreet, Node newnode, Node oldnode,Street_type major,List<Node> to_grow_nodes,Quarter quarter){
 		Street intersecting = null;
 		Point intersection = null;
-		double min = Point.dist(oldnode.point, newnode.point);
+		double min = Point.dist(oldnode.getPoint(), newnode.getPoint());
 		for (Node n: nodes) {
 			for(Street street: n.streets){
 				if(!street.equals(newstreet)){
 					Point intersect = null;
 					intersect  = Street.getIntersection(street, newstreet);
 					
-					if(intersect != null && Point.dist(oldnode.point, intersect) < min
-							&& Point.dist(intersect, street.node1.point) > 0.00001 && Point.dist(intersect, street.node2.point) > 0.00001){
+					if(intersect != null && Point.dist(oldnode.getPoint(), intersect) < min
+							&& Point.dist(intersect, street.node1.getPoint()) > 0.00001 && Point.dist(intersect, street.node2.getPoint()) > 0.00001){
 						intersecting = street;
 						intersection = intersect;
-						min = Point.dist(oldnode.point, intersect);
+						min = Point.dist(oldnode.getPoint(), intersect);
 					}
 				}
 			}
@@ -460,7 +460,7 @@ public class Street_Network implements Serializable{
 	
 	
 	private Street_Result check_if_in_quarter(Street newstreet){
-		Node middlenode = new Node((newstreet.node1.point.getX()+newstreet.node2.point.getX())/2, (newstreet.node1.point.getY()+newstreet.node2.point.getY())/2, null);
+		Node middlenode = new Node((newstreet.node1.getPoint().getX()+newstreet.node2.getPoint().getX())/2, (newstreet.node1.getPoint().getY()+newstreet.node2.getPoint().getY())/2, null);
 		for(Quarter q: quarters){
 			if(q.check_if_inside(middlenode) == Street_Result.not_altered){
 				return Street_Result.fail;
@@ -681,7 +681,7 @@ public class Street_Network implements Serializable{
 				type = Street_type.major;
 			else
 				type = Street_type.minor;
-			Street street = new Street(node1, node2, type,node1.built && node2.built);
+			Street street = new Street(node1, node2, type,node1.isBuilt() && node2.isBuilt());
 
 			node1.streets.add(street);
 			node2.streets.add(street);	
@@ -696,9 +696,9 @@ public class Street_Network implements Serializable{
 	 * @param quarter »tvrù
 	 */
 	private void make_seed_node(List<Node> to_grow_nodes,City_part quarter){
-			Street oldstreet = quarter.streets.get(0);
-			Point x = oldstreet.node1.point;
-			Point y = oldstreet.node2.point;
+			Street oldstreet = quarter.Get_Longest_Street();
+			Point x = oldstreet.node1.getPoint();
+			Point y = oldstreet.node2.getPoint();
 			double newx = (x.getX() + y.getX())/2;
 			double newy = (x.getY() + y.getY() )/2;
 			Node new_node = new Node(newx,newy, Street_type.major);
@@ -844,12 +844,7 @@ public class Street_Network implements Serializable{
 				nodes.add(s.node2);
 			}
 		}
-		
-		ArrayList<Node> borders = new ArrayList<>(nodes);
-		/*if(bigger instanceof Block){
-			((Block) bigger).remove_useless_nodes(borders);
-		}*/
 		return false;
-		//return smaller.get_nodes().containsAll(borders);
+
 	}
 } 
