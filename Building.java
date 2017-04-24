@@ -71,10 +71,10 @@ public class Building implements Serializable{
 	 */
 	private void create_borders(){
 		borders = new ArrayList<>();
-		Node first =  new Node(placement.get(0).getX(), placement.get(0).getY(), Street_type.lot_border);
+		Node first =  new Node(placement.get(0).getX(), placement.get(0).getY(), Street_type.lot_border,null);
 		Node prev = first;
 		for (int i = 1; i < points.size(); i++) {
-			Node newnode =  new Node(placement.get(i).getX(), placement.get(i).getY(), Street_type.lot_border);
+			Node newnode =  new Node(placement.get(i).getX(), placement.get(i).getY(), Street_type.lot_border,null);
 			borders.add(new Street(prev, newnode, Street_type.lot_border));
 			prev = newnode;
 		}
@@ -93,7 +93,7 @@ public class Building implements Serializable{
 	 *
 	 * @param point Bod, do kterého se má budova umístit.
 	 */
-	public void place (Point point){
+	public void place(Point point){
 		placement =  new ArrayList<>();
 		for(Point p: points){
 			placement.add(new Point(p.getX()+point.getX(), p.getY() + point.getY()));
@@ -143,6 +143,7 @@ public class Building implements Serializable{
 	 */
 	public boolean try_place_on_street(City_part cp, Street street, boolean node1, boolean rotation,boolean minus,Settings settings){
 		
+		
 		Street small = borders.get(0);
 		if(street.length < small.length){
 			return false;
@@ -164,22 +165,26 @@ public class Building implements Serializable{
 		double angle = Math.min(Street.get_angle(street, small), (360+180-Street.get_angle(street, small))%360);
 		rotate(angle);
 		this.angle += angle;	
-		move_away_from_street(street, settings.street_width/2 + settings.street_offset, minus);
-		boolean succes = control(cp,street,node1);
-		if(succes){
+		move_away_from_street(street, settings.street_width/2 + settings.street_offset+0.1, minus);
+		
+		//System.out.println(street.length + "   " + street.major + center);
+		boolean succes = control(cp,street,node1,settings);
+		/*if(succes){
 			for(Street s: cp.streets){
 				if(s !=  street && s.major != Street_type.lot_border){
-					move_away_from_street(s, settings.street_width/2, true);
-					succes = succes && control(cp,street,node1);
-					move_away_from_street(s, 2*settings.street_width/2, false);
-					succes = succes && control(cp,street,node1);
-					move_away_from_street(s, settings.street_width/2, true);
+					move_away_from_street(s, settings.street_width/2 + settings.street_offset, true);
+					succes = succes && control(cp,street,node1,settings);
+					move_away_from_street(s, 2*(settings.street_width/2 + settings.street_offset), false);
+					succes = succes && control(cp,street,node1,settings);
+					move_away_from_street(s, settings.street_width/2 + settings.street_offset, true);
 				}
 			}
-		}
+		}*/
 		
-		if(succes)
+		if(succes){
+
 			return true;
+		}
 		else{
 			place(new Point(0,0));
 			this.angle = 0;
@@ -193,22 +198,30 @@ public class Building implements Serializable{
 	 * @param cp pozemek, ve kterém má být budova umístìna
 	 * @return zda je budova správnì umístìna
 	 */
-	private boolean control(City_part cp,Street s,boolean node1){
-		boolean succes = false;
-		if(cp.check_if_inside(new Node(center.getX(),center.getY(),null)) == Street_Result.not_altered){
-			succes = true;
+	private boolean control(City_part cp,Street s,boolean node1,Settings settings){
+		double street_distance = settings.street_width/2+settings.street_offset;
+		if(cp.check_if_inside(new Node(center.getX(),center.getY(),null,null)) == Street_result.fail){
+			return false;
 		}
-		if(succes){
-			outer:for(Street s1: cp.streets){
-				for(Street s2: borders){
-					if(Street.getIntersection(s1, s2) != null){
-						succes = false;
-						break outer;
-					}
+		for(Street s1: cp.streets){
+			for(Street s2: borders){
+				
+				if(Street.getIntersection(s1, s2) != null){
+					//System.out.println("prusecik s normalni ulici " + s1 + " " +s2);
+					return false;
+				}
+				if(s1.major != Street_type.lot_border && Street.getIntersection(s1.get_parallel_street(street_distance, true), s2) != null){
+					//System.out.println("prusecik s true ulici " + s1+ " " +s2 + " coz je " + s1.get_parallel_street(street_distance, true));
+					return false;
+				}
+				if(s1.major != Street_type.lot_border && Street.getIntersection(s1.get_parallel_street(street_distance, false), s2) != null){
+					//System.out.println("prusecik s false ulici " + s1+ " " +s2);
+					return false;
 				}
 			}
 		}
-		return succes;
+
+		return true;
 	}
 	
 	
@@ -219,7 +232,7 @@ public class Building implements Serializable{
 	 * @param dist Vzdálenost, o kterou posouváme
 	 * @param minus Na kterou stranu posouváme
 	 */
-	public void move_away_from_street(Street street,double dist, boolean minus){
+	private void move_away_from_street(Street street,double dist, boolean minus){
 		double minus_one = 1;
 		if(minus)
 			minus_one = -1;
@@ -272,9 +285,8 @@ public class Building implements Serializable{
 	public void setName(String name) {
 		this.name = name;
 	}
-	public double getArea(){
+	public double get_area(){
 		return get_front_length()*get_side_length();
 	}
 
-	
 }

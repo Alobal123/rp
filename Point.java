@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-// TODO: Auto-generated Javadoc
 /**
  *Bod v rovinì.
  */
@@ -116,7 +115,8 @@ public class Point implements Serializable{
 		double rx = round(getX(),3);
 		double ry = round(getY(),3);
 		return "(" + rx + " , " + ry + ")";
-	}
+	}	
+	
 	
 	public static double round(double value, int places) {
 	    if (places < 0) throw new IllegalArgumentException();

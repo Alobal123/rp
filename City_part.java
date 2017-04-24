@@ -2,7 +2,7 @@ package krabec.citysimulator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -43,8 +43,8 @@ public abstract class City_part implements Serializable{
 	 *
 	 * @return Mnoina uzlù
 	 */
-	public HashSet<Node> get_nodes_once(){
-		HashSet<Node> nodes =  new HashSet<>();
+	public LinkedHashSet<Node> get_nodes_once(){
+		LinkedHashSet<Node> nodes =  new LinkedHashSet<>();
 		for (Street street: streets) {
 			nodes.add(street.node1);
 			nodes.add(street.node2);
@@ -63,7 +63,7 @@ public abstract class City_part implements Serializable{
 		for (Street s: streets) {
 			
 			if(points.size() == 0){
-				points.add(s.other_node(firstnode));
+				points.add(s.get_other_node(firstnode));
 				points.add(firstnode);
 			}
 			else {
@@ -85,9 +85,7 @@ public abstract class City_part implements Serializable{
 					points.add(s.node1);
 
 				}
-				else{
-					System.out.println("mame problem");
-				}
+
 			}
 			prev = s;
 		}	
@@ -109,7 +107,7 @@ public abstract class City_part implements Serializable{
 		for (Street s: streets) {
 			
 			if(points.size() == 0){
-				points.add(s.other_node(firstnode).getPoint());
+				points.add(s.get_other_node(firstnode).getPoint());
 				points.add(firstnode.getPoint());
 				
 			}
@@ -132,19 +130,28 @@ public abstract class City_part implements Serializable{
 					points.add(s.node1.getPoint());
 
 				}
-				else{
-					System.out.println("mame problem");
-				}
 			}
 			prev = s;
 		}	
 		return points;
 	}
+	/**
+	 * Vrací seznam uzlù leících uvnitø této ètvrti.
+	 * @return
+	 */
+	public ArrayList<Node> filter_nodes_outside_this_quarter(List<Node> nodes){
+		ArrayList<Node> filtered = new ArrayList<>();
+		for(Node n: nodes){
+			if(check_if_inside(n) != Street_result.fail)
+				filtered.add(n);
+		}
+		return filtered;
+	}
 	
 	/**
 	 * Vypoèítá obsah mnohoúhelníku daného touto mìstskou èástí.
 	 */
-	public void find_area(){
+	public void compute_area(){
 		ArrayList<Point> points = get_points();
 		double x = 0;
 		double y = 0;
@@ -171,30 +178,31 @@ public abstract class City_part implements Serializable{
 	 * @param quarter Ètvr ve které ulice stavíme (nebo null)
 	 * @return Zda je nová ulice v poøádku a zda se zmìnila.
 	 */
-	public Street_Result check_if_inside(Node newnode){
-		double angle = 0;
-		boolean inside = true;
+	public Street_result check_if_inside(Node newnode){
+		double angle = 12.456;
+		boolean inside = false;
 		for(Street s: streets){
-			if(newnode.distance(s) < 0.0001)
-				return Street_Result.not_altered;
+			if(newnode.compute_distance_from_street(s) < 0.0001)
+				return Street_result.not_altered;
 		}
 		while(angle<360){
-			Street help_street = new Street(newnode, Node.make_new_node(angle, null, newnode, 1000*1000), null);
+			Street help_street = new Street(newnode, Node.make_new_node(angle, null, newnode, 1000*1000,null), null);
 			int intersections = 0;
-			int intersections2 = 0;
 			for (Street s: streets) {
 				if( Street.getIntersection(s, help_street)!=null ){
 					intersections++;
 				}
 			}
-			inside = inside && (intersections%2 == 1 || intersections2%2 ==1);
-			angle+=30.35954;
+			if(intersections%2 == 1)
+				return Street_result.not_altered;
+			//inside = inside && (intersections%2 == 1);
+			angle+=50.1234567;
 		}	
 		if(inside)
-			return Street_Result.not_altered;
-		return Street_Result.fail;
+			return Street_result.not_altered;
+		return Street_result.fail;
 	}
-	public Street Get_Longest_Street(){
+	public Street get_longest_street(){
 		double max = 0;
 		Street longest = null;
 		for(Street s: streets){

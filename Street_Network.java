@@ -2,12 +2,10 @@ package krabec.citysimulator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 import krabec.citysimulator.ui.City_window;
 
@@ -22,15 +20,6 @@ public class Street_Network implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = 6510576669225628174L;
-	/** Reprezentuje speciální typ køiovatky - slepou ulièku s jedinou ulicí.*/
-	public static final Crossroad end_of_road;
-	static {
-		end_of_road = new Crossroad(1, null);
-		end_of_road.angles = new ArrayList<>();
-		end_of_road.angles.add(360.0);
-	}
-	
-	int number = 0;
 	/** Všechny pouitelné køiovatky. */
 	public List<Crossroad> all_crossroads;
 	
@@ -38,11 +27,13 @@ public class Street_Network implements Serializable{
 	public List<Quarter> quarters = new ArrayList<>();
 	/** Seznam všech uzlù v grafu ulic. */
 	public List<Node> nodes;
+
+	public Random_Wrapped rnd;
 	
-	static Random rnd = new Random();
+	Crossroad end_of_road;
 	
 	/** Seznam všech center rùstu ve mìstì. */
-	List<Point> growthcenters;
+	List<Point> growthcenters  = new ArrayList<Point>();
 	
 	/** Seznam všech center mìsta. */
 	List<Point> citycenters = new ArrayList<Point>();
@@ -51,40 +42,38 @@ public class Street_Network implements Serializable{
 	List<Node> to_grow_nodes;
 	
 	/** Aktuálnì zpracovávanı novì vytvoøenı uzel. Figuruje v metodì grow_street.*/
-	Node current_new_node;
+	private Node current_new_node;
 	
 	/**Aktuálnì zpracovávaná novì vytvoøená ulice. Figuruje v metodì grow_street. */
-	Street current_new_street;
+	private Street current_new_street;
 	
 	/** Seznam uzlù, které se nìjakım zpùsobem zmìnily. */
-	List<Node> changed_nodes;
+	private List<Node> changed_nodes;
 	public Settings settings;
 	
 	/**
 	 * Konstruktor 
 	 *
 	 */
-	public Street_Network(){
-		nodes = new ArrayList<>();
-		growthcenters = new ArrayList<>();
-		to_grow_nodes = new ArrayList<>();
-		settings = new Settings();
-	}
 	public Street_Network(List<Crossroad> all_crossroads,Settings settings){
 		
+		end_of_road = Crossroad.get_new_end_of_Road();
+		all_crossroads.add(end_of_road);
+		for (Crossroad c: all_crossroads) {
+			c.get_viable_crossroads(all_crossroads);
+		}
+		 
 		nodes = new ArrayList<>();
 		growthcenters = new ArrayList<>();
 		to_grow_nodes = new ArrayList<>();
 		this.all_crossroads = all_crossroads;
-		
-		Node node1 = (new Node(0, 0, Street_type.major));	
+
+		Node node1 = (new Node(0, 0, Street_type.major,end_of_road));	
 		nodes.add(node1);
-		node1.crossroad = Street_Network.end_of_road;
 		node1.angle = 270;
 		
-		Node node2 = new Node(-50, 0, Street_type.major);
+		Node node2 = new Node(-50, 0, Street_type.major,end_of_road);
 		nodes.add(node2);
-		node2.crossroad = Street_Network.end_of_road;
 		node2.angle = 90;
 		City_window.create_street(node1, node2,Street_type.major);
 		for (Node n: nodes) {
@@ -110,22 +99,18 @@ public class Street_Network implements Serializable{
 		for (Node node : chosen_nodes) {
 			Street newstreet = grow_street(node,Street_type.major,null,to_grow_nodes);
 			if(newstreet != null){
-				newstreet.length = newstreet.get_length();
-				ArrayList<Street> new_quarter = check_for_new_quarters(newstreet,true,null,newstreet.node2,false);
-				ArrayList<Street> new_quarter2 = check_for_new_quarters(newstreet,true,null,newstreet.node1,false);
+				newstreet.length = newstreet.compute_length();
+				ArrayList<Street> new_quarter = Block_search.check_for_new_quarters(newstreet,true,null,newstreet.node2,false);
+				ArrayList<Street> new_quarter2 = Block_search.check_for_new_quarters(newstreet,true,null,newstreet.node1,false);		
+				
 				if(new_quarter != null && new_quarter2 != null){
 					if(new_quarter.size() < new_quarter2.size()){
 						Quarter q = new Quarter(new_quarter,newstreet.node2);
-						number++;
-						q.number = number;
 						quarters.add(q);
 						grow_minor_streets(q);
-
 					}
 					else{
 						Quarter q = new Quarter(new_quarter2,newstreet.node1);
-						number++;
-						q.number = number;
 						quarters.add(q);
 						grow_minor_streets(q);
 					}
@@ -146,49 +131,71 @@ public class Street_Network implements Serializable{
 				to_grow_nodes.add(s.node1);
 			if(!to_grow_nodes.contains(s.node2))
 				to_grow_nodes.add(s.node2);
-		}
+		}	
 		boolean some_minor_street = false;
-		make_seed_node(to_grow_nodes, quarter);
+		Street old_street = quarter.get_longest_street();
+		Node seed_node = make_seed_node(to_grow_nodes, old_street);
+
 		while(!to_grow_nodes.isEmpty()){
 			ArrayList<Node> chosen_nodes = choose_nodes_to_grow(to_grow_nodes,10);
 			for (Node n: chosen_nodes){
 				 Street s = grow_street(n,Street_type.minor, quarter, to_grow_nodes);
 				 if(s!=null){
-					 s.length = s.get_length();
+					 s.length = s.compute_length();
 					 some_minor_street = true;
 				 }
 			}
 		}
 		
-		if(some_minor_street){
-			search_for_blocks(quarter,nodes,false,true,settings);
+		if(!some_minor_street){
+			//remove_node_with_180_180_crossroad(seed_node, old_street);
+			//nodes.remove(seed_node);
+			//to_grow_nodes.remove(seed_node);
 		}
-		else{
-			search_for_blocks(quarter,nodes,true,true,settings);
+		
+		if(some_minor_street){
+			Block_search.search_for_blocks_inside_quarter(quarter,quarter.filter_nodes_outside_this_quarter(nodes),false,true,settings);
+		}
+		
+		
+		if(!some_minor_street|| quarter.contained_city_parts.size()==0){
+
+			Block_search.search_for_blocks_inside_quarter(quarter,quarter.filter_nodes_outside_this_quarter(nodes),true,true,settings);
 			if(quarter.contained_city_parts.get(0).streets.size() > quarter.contained_city_parts.get(1).streets.size())
 				quarter.contained_city_parts.remove(1);
 			else
 				quarter.contained_city_parts.remove(0);
+
 		}
+		if(quarter.contained_city_parts.size()>1)
+			repair(quarter);
+		//control(quarter);
 	}
-	
-	
-	private void control_blocks(Quarter q) {
+	private void control(Quarter q) {
 		ArrayList<City_part> to_remove = new ArrayList<>();
 		for(City_part cp: q.contained_city_parts){
-			for(City_part cp2 : q.contained_city_parts){
-				if(cp != cp2){
-					Node center = new Node(cp2.center.getX(), cp2.center.getY(), null);
-					if(cp.check_if_inside(center) == Street_Result.not_altered)
-						to_remove.add(cp2);
-				}
-			}
+				for(Node n: cp.get_nodes_once())
+					if(q.check_if_inside(n) == Street_result.fail){
+						to_remove.add(cp);
+						break;
+					}
 		}
 		if(!to_remove.isEmpty())
-			System.out.println("odstraneno");
 		q.contained_city_parts.removeAll(to_remove);
 		
 	}
+	
+	private void repair( Quarter quarter){
+
+				Iterator<City_part> i = quarter.contained_city_parts.iterator();
+				while (i.hasNext()) {
+				   City_part block = i.next();
+				   if(block.area-quarter.area > 0.0001)
+					   i.remove();
+				}
+	
+	}
+	
 	/**
 	 * Vybere ze seznamu uzlù nìkolik uzlù, podle toho jak jsou vzdálené od center rùstu.
 	 *
@@ -199,7 +206,6 @@ public class Street_Network implements Serializable{
 	private ArrayList<Node> choose_nodes_to_grow(List<Node> to_grow_nodes, int number_of_streets){  
 		
 		ArrayList<Node> chosen = new ArrayList<>();
-		assert to_grow_nodes.size()>0:"There are no nodes to grow";
 	    double [] distribution = new double [to_grow_nodes.size()]; 
 	    
 	    double distSum = 0;
@@ -210,7 +216,7 @@ public class Street_Network implements Serializable{
 			distSum +=distribution[i];
 		}
 		for (int j = 0; j < number_of_streets; j++) {		
-				double rand = Math.random();
+				double rand = rnd.nextDouble("choose_nodes_to_grow , we have " + quarters.size());
 				double ratio = 1.0f / distSum;
 				double tempDist = 0;
 				for (int i = 0; i < distribution.length; i++) {
@@ -240,20 +246,20 @@ public class Street_Network implements Serializable{
 		}
 		
 		boolean succes = true;
-		int limit = 10;							//TODO nastav limit kolikrat se bude zkouset stavet cesta z uzlu nez se vyradi
+		int limit = 5;							
 		cyklus: for (int i = 0; i < limit; i++) {
 			succes = true;
-			int a = rnd.nextInt(oldnode.crossroad.viable_crossroads.size());
+			int a = rnd.nextInt(oldnode.crossroad.viable_crossroads.size(),"choose_which_crossroad");
 			Crossroad new_crossroad = oldnode.crossroad.viable_crossroads.get(a);
 			Crossroad old_crossroad = oldnode.crossroad;
 			double angle = (oldnode.angle + oldnode.crossroad.get_relative_angle(a)+360) % 360;
 			double length;
 			if(major == Street_type.major)
-				length= rnd.nextDouble() * (settings.major_max_length - settings.major_min_length) + settings.major_min_length +settings.major_prolongation;
+				length= rnd.nextDouble("choose_major_length") * (settings.major_max_length - settings.major_min_length) + settings.major_min_length +settings.major_prolongation;
 			else
-				length = rnd.nextDouble() * (settings.minor_max_length - settings.minor_min_length) + settings.minor_min_length +settings.minor_prolongation; 
+				length = rnd.nextDouble("choose_major_length") * (settings.minor_max_length - settings.minor_min_length) + settings.minor_min_length +settings.minor_prolongation; 
 			
-			current_new_node = Node.make_new_node(angle, major, oldnode,length);
+			current_new_node = Node.make_new_node(angle, major, oldnode,length,end_of_road);
 			current_new_node.angle = angle;
 			current_new_street = new Street( oldnode, current_new_node,major);
 			current_new_node.streets.add(current_new_street);
@@ -261,14 +267,15 @@ public class Street_Network implements Serializable{
 			oldnode.streets.add(current_new_street);
 			oldnode.crossroad = new_crossroad;
 			oldnode.angle = oldnode.compute_angle();
+			
 			nodes.add(current_new_node);
 			to_grow_nodes.add(current_new_node);
 
-			Street_Result result = Street_Result.not_altered;
+			Street_result result = Street_result.not_altered;
 			
 			if(succes){
 				result = check_for_crosses(current_new_street, current_new_node, oldnode,major,to_grow_nodes,quarter);
-				if(result == Street_Result.not_altered){
+				if(result == Street_result.not_altered){
 					if(major == Street_type.major)
 						length -= settings.major_prolongation;	
 					else
@@ -277,38 +284,36 @@ public class Street_Network implements Serializable{
 					double dy = Math.cos(angle * Math.PI / 180) * length;
 					current_new_node.setPoint(new Point(oldnode.getPoint().getX() + dx, oldnode.getPoint().getY() + dy));
 				}
-				else if (result == Street_Result.fail){
+				else if (result == Street_result.fail){
 					revert_changes(oldnode, old_crossroad,major,to_grow_nodes);
 					succes = false;
 				}
 			}
 			
-			if(succes && !(major == Street_type.major)){ //&& result != Street_Result.altered){
+			if(succes && !(major == Street_type.major)){
 				result = quarter.check_if_inside(current_new_node);
-				if(result == Street_Result.fail){
+				if(result == Street_result.fail){
 					revert_changes(oldnode, old_crossroad,major,to_grow_nodes);
 					succes = false;
 				}
 			}
 			if(succes && major == Street_type.major){
 				result = check_if_in_quarter(current_new_street);
-				if(result == Street_Result.fail){
+				if(result == Street_result.fail){
 					revert_changes(oldnode, old_crossroad,major,to_grow_nodes);
 					succes = false;
 				}
 			}
-			
-			
 			if(succes){
 				result = check_for_close_streets(current_new_node,current_new_street,major);
-				if(result == Street_Result.fail){
+				if(result == Street_result.fail){
 					revert_changes(oldnode, old_crossroad,major,to_grow_nodes);
 					succes = false;
 				}
 			}
 			if(succes){
 				result = check_for_close_node(current_new_street, current_new_node,oldnode,major,to_grow_nodes);
-				if(result == Street_Result.fail){
+				if(result == Street_result.fail){
 					revert_changes(oldnode, old_crossroad,major,to_grow_nodes);
 					succes = false;
 				}
@@ -340,7 +345,7 @@ public class Street_Network implements Serializable{
 	 * @param to_grow_nodes Uzly, které mohou dále rùst
 	 * @return Zda je nová ulice v poøádku a zda se zmìnila.
 	 */
-	private Street_Result check_for_close_node(Street s, Node newnode, Node oldnode,Street_type major,List<Node> to_grow_nodes) {
+	private Street_result check_for_close_node(Street s, Node newnode, Node oldnode,Street_type major,List<Node> to_grow_nodes) {
 		
 		double constant;
 		if(major==Street_type.major)
@@ -367,17 +372,17 @@ public class Street_Network implements Serializable{
 					current_new_node = n;
 					current_new_street = newstreet;
 					
-					return Street_Result.altered;
+					return Street_result.altered;
 				}
 				else{
 					oldnode.streets.add(s);
 					oldnode.streets.remove(newstreet);
 					n.streets.remove(newstreet);
-					return Street_Result.fail;
+					return Street_result.fail;
 				}
 			}
 		}
-		return Street_Result.not_altered;
+		return Street_result.not_altered;
 		
 	}
 
@@ -394,7 +399,7 @@ public class Street_Network implements Serializable{
 	 * @return Zda je nová ulice v poøádku a zda se zmìnila.
 	 */
 	
-	private Street_Result check_for_crosses(Street newstreet, Node newnode, Node oldnode,Street_type major,List<Node> to_grow_nodes,Quarter quarter){
+	private Street_result check_for_crosses(Street newstreet, Node newnode, Node oldnode,Street_type major,List<Node> to_grow_nodes,Quarter quarter){
 		Street intersecting = null;
 		Point intersection = null;
 		double min = Point.dist(oldnode.getPoint(), newnode.getPoint());
@@ -415,7 +420,7 @@ public class Street_Network implements Serializable{
 		}
 		
 		if(intersecting != null){
-			Node trynode = new Node(intersection.getX(), intersection.getY(), intersecting.major,intersecting.built);
+			Node trynode = new Node(intersection.getX(), intersection.getY(), intersecting.major,intersecting.built,end_of_road);
 			
 			Street newstreet1 = new Street(intersecting.node1, trynode, intersecting.major,intersecting.built);
 			Street newstreet2 = new Street(intersecting.node2,trynode,intersecting.major,intersecting.built);
@@ -448,25 +453,25 @@ public class Street_Network implements Serializable{
 					trynode.angle = trynode.compute_angle();
 					current_new_node = trynode;
 					current_new_street = newstreet3;
-					return Street_Result.altered;
+					return Street_result.altered;
 				}
 			}
 			
-			return Street_Result.fail;
+			return Street_result.fail;
 		}
 		
-		return Street_Result.not_altered;
+		return Street_result.not_altered;
 	}
 	
 	
-	private Street_Result check_if_in_quarter(Street newstreet){
-		Node middlenode = new Node((newstreet.node1.getPoint().getX()+newstreet.node2.getPoint().getX())/2, (newstreet.node1.getPoint().getY()+newstreet.node2.getPoint().getY())/2, null);
+	private Street_result check_if_in_quarter(Street newstreet){
+		Node middlenode = new Node((newstreet.node1.getPoint().getX()+newstreet.node2.getPoint().getX())/2, (newstreet.node1.getPoint().getY()+newstreet.node2.getPoint().getY())/2, null,end_of_road);
 		for(Quarter q: quarters){
-			if(q.check_if_inside(middlenode) == Street_Result.not_altered){
-				return Street_Result.fail;
+			if(q.check_if_inside(middlenode) == Street_result.not_altered){
+				return Street_result.fail;
 			}
 		}
-		return Street_Result.not_altered;
+		return Street_result.not_altered;
 	}
 	/**
 	 * Zkontroluje, zda se novı uzel nenachází pøíliš blízko nìjaké ji existující ulici.
@@ -476,7 +481,7 @@ public class Street_Network implements Serializable{
 	 * @param major Zda stavíme hlavní ulici
 	 * @return Zda je nová ulice v poøádku a zda se zmìnila.
 	 */
-	private Street_Result check_for_close_streets(Node newnode,Street newstreet, Street_type major){
+	private Street_result check_for_close_streets(Node newnode,Street newstreet, Street_type major){
 		double constant;
 		if(major==Street_type.major)
 			 constant = settings.major_close_street_constant;
@@ -486,165 +491,17 @@ public class Street_Network implements Serializable{
 		
 		for (Node n: nodes) {
 			for(Street s: n.streets){
-				if((s.node1 != newnode && s.node2 != newnode && newnode.distance(s) < constant) 
-						|| (newstreet.node1 != n && newstreet.node2 != n && n.distance(newstreet) < constant)){
-					return Street_Result.fail;
+				if((s.node1 != newnode && s.node2 != newnode && newnode.compute_distance_from_street(s) < constant) 
+						|| (newstreet.node1 != n && newstreet.node2 != n && n.compute_distance_from_street(newstreet) < constant)){
+					return Street_result.fail;
 				}
 			}
 		
 		}
-		return Street_Result.not_altered;
+		return Street_result.not_altered;
 	}
 	
-	/**
-	 * V dané ètvrti nalezne všechny bloky, tj. stìny grafu tvoøeného hlavními ulicemi ohranièujícími ètvr a vedlejšími ulicemi uvnitø.
-	 *
-	 * @param quarter Ètvr
-	 */
-	public static void search_for_blocks(City_part quarter,List<Node> nodes,boolean whole,boolean blocks,Settings settings){
-		HashSet<Street> to_search1 = new HashSet<>();
-		HashSet<Street> to_search2 = new HashSet<>();
-		
-		for (Node n: nodes){
-			for(Street s: n.streets){
-				if(quarter.check_if_inside(s.node1)!=Street_Result.fail && quarter.check_if_inside(s.node2)!=Street_Result.fail){
-					to_search1.add(s);
-					to_search2.add(s);
-				}
-			}
-		}
-		
-		while(!to_search1.isEmpty()){
-			Iterator<Street> i = to_search1.iterator();
-			Street s = i.next();
-			find_blocks(s,quarter,to_search1,to_search2, true,whole,blocks,settings);
-		}
-		
-		while(!to_search2.isEmpty()){
-			Iterator<Street> i = to_search2.iterator();
-			Street s = i.next();
-			find_blocks(s,quarter,to_search1,to_search2, false,whole,blocks,settings);
-		}
-	}
-	
-	/**
-	 * Hledá blok, kterı obsahuje ulici s ve ètvrti.
-	 *
-	 * @param s Ulice s
-	 * @param quarter Ètvr
-	 * @param to_search1 Mnoina ulic ze kterıch je ještì tøeba hledat bloky ve smìru node1 -> node2
-	 * @param to_search2 Mnoina ulic ze kterıch je ještì tøeba hledat bloky ve smìru node2 -> node1
-	 * @param from_1 Smìr hledání bloku
-	 */
-	public static ArrayList<Street> find_blocks(Street s ,City_part quarter,HashSet<Street> to_search1,HashSet<Street> to_search2, Boolean from_1,Boolean whole,Boolean blocks,Settings settings){
-				Node first = s.node2;
-				if(from_1){
-					first = s.node1;
-					to_search1.remove(s);
-				}
-				else{
-					to_search2.remove(s);
-				}
-				
-				ArrayList<Street> streets = check_for_new_quarters(s, true, quarter,first,!blocks);
-				
-				Node prevnode = null;
-				if(streets != null){
-						City_part block;
-						if(blocks){
-							block = new Block(streets,first,settings);
-						}
-						else{
-							block = new Lot(streets,first);
-						}
-					if(!is_biggest(quarter, block) || whole){
-						quarter.contained_city_parts.add(block);
-						prevnode = null;
-						for(Street s2 : streets){
-							if(blocks && !s2.node1.blocks.contains(block))
-								s2.node1.blocks.add((Block) block);
-							if(blocks && !s2.node2.blocks.contains(block))
-								s2.node2.blocks.add((Block) block);
-							
-							if(prevnode == null){
-								prevnode = first;
-								if(from_1)
-									to_search1.remove(s2);
-								else
-									to_search2.remove(s2);
-							}
-							else{
-								if(s2.other_node(prevnode) == s2.node1){
-									
-									to_search1.remove(s2);
-								}
-								else{
-									to_search2.remove(s2);
-								}
-								prevnode = s2.other_node(prevnode);
-							}
-						}
-					}
-				}
-				return streets;
-	}
-	
-	
-	/**
-	 * Pokusí se najít mìstskou èást vzniklou pøidáním novì vytvoøené ulice. Vrací null pokud ádnou nenajde. 
-	 * Pokud není parametr quarter null, hledá blok v této ètvrti. Jinak hledá pouze hlavní ulice.
-	 * Vrací seznam ulic ohranièující nalezenou mìstskou èást.
-	 *
-	 * @param newstreet Nová ulice
-	 * @param clockwise Zda se má hledat po smìru hodinovıch ruèièek
-	 * @param quarter Ètvr
-	 * @param startnode Uzel, ze kterého zaèínáme hledat
-	 * @return Seznam ulic ohranièujících nalezenou èást mìsta
-	 */
-	public static ArrayList<Street> check_for_new_quarters(Street street,Boolean clockwise,City_part quarter,Node startnode,boolean simple){
-		if(street == null || street.node1.streets.size() ==1 || street.node2.streets.size() ==1){
-			return null;
-		}
-		if(startnode == null)
-			startnode = street.node1;
-		ArrayList<Street> rt = new ArrayList<>();
-		HashMap<Street, Integer> visited = new HashMap<>();
-		rt.add(street);
-		visited.put(street, 1);
-		Node n = startnode;
-		Street s = get_least_angled(n,street, clockwise, quarter,simple);
-		
-		n = s.other_node(n);
-		
-		while(s != street){
-			if(visited.containsKey(s)){
-				if(visited.get(s) > 1){
-					return null;
-				}
-				else
-					visited.put(s, visited.get(s) +1);
-			}
-			else
-				visited.put(s, 1);
-			
-			rt.add(s);
-			Street s2 = get_least_angled(n,s,clockwise,quarter,simple);
-			n = s2.other_node(n);
-			s = s2;
-		}
-		
-		if(rt.size()%2 == 0){
-			for (int i = 0; i < rt.size()/2; i+=2) {
-				if(rt.get(i) != rt.get(i+1)){
-					return rt;
-				}
-			}
-		}
-		else{
-			return rt;
-		}
-		return null;
-	}
+
 
 	/**
 	
@@ -658,34 +515,41 @@ public class Street_Network implements Serializable{
 	 * @param to_grow_nodes Uzly, které mohou dále rùst
 	 */
 	private void revert_changes(Node oldnode,Crossroad old_crossroad,Street_type major,List<Node> to_grow_nodes){
-		
+
 		current_new_node.streets.remove(current_new_street);
-		nodes.remove(current_new_node);
-		to_grow_nodes.remove(current_new_node);
 		oldnode.streets.remove(current_new_street);
 		oldnode.crossroad = old_crossroad;
 		oldnode.angle = oldnode.compute_angle();
-		
+		nodes.remove(current_new_node);
+		to_grow_nodes.remove(current_new_node);
 		if(current_new_node.streets.size() == 2 && Math.abs(180 - Street.get_angle(current_new_node.streets.get(0), current_new_node.streets.get(1)))<0.0001){
-			Node node1 = current_new_node.streets.get(0).node1;
-			if(node1 == current_new_node)
-				node1 = current_new_node.streets.get(0).node2;
-			Node node2 = current_new_node.streets.get(1).node1;
-			if(node2 == current_new_node)
-				node2 = current_new_node.streets.get(0).node2;
-			node1.remove_street_to_node(current_new_node);
-			node2.remove_street_to_node(current_new_node);
-			
-			Street_type type;
-			if(node1.major==Street_type.major && node2.major==Street_type.major && current_new_node.major==Street_type.major )
-				type = Street_type.major;
-			else
-				type = Street_type.minor;
-			Street street = new Street(node1, node2, type,node1.isBuilt() && node2.isBuilt());
-
-			node1.streets.add(street);
-			node2.streets.add(street);	
+			remove_node_with_180_180_crossroad(current_new_node,null);
 		}
+
+	}
+	
+	
+	private void remove_node_with_180_180_crossroad(Node n,Street old_street){
+
+		Node node1 = n.streets.get(0).get_other_node(n);
+		Node node2 = n.streets.get(1).get_other_node(n);
+		node1.remove_street_to_node(n);
+		node2.remove_street_to_node(n);
+		
+		Street_type type;
+		if(node1.major==Street_type.major && node2.major==Street_type.major && current_new_node.major==Street_type.major )
+			type = Street_type.major;
+		else
+			type = Street_type.minor;
+		Street street;
+		if(old_street==null)
+			street = new Street(node1, node2, type,node1.isBuilt() && node2.isBuilt());
+		else
+			street = old_street;
+
+		node1.streets.add(street);
+		node2.streets.add(street);	
+
 	}
 
 	
@@ -695,13 +559,12 @@ public class Street_Network implements Serializable{
 	 * @param to_grow_nodes Uzly, které mohou dále rùst
 	 * @param quarter Ètvr
 	 */
-	private void make_seed_node(List<Node> to_grow_nodes,City_part quarter){
-			Street oldstreet = quarter.Get_Longest_Street();
+	private Node make_seed_node(List<Node> to_grow_nodes, Street oldstreet){
 			Point x = oldstreet.node1.getPoint();
 			Point y = oldstreet.node2.getPoint();
-			double newx = (x.getX() + y.getX())/2;
-			double newy = (x.getY() + y.getY() )/2;
-			Node new_node = new Node(newx,newy, Street_type.major);
+			double newx = (x.getX()*0.51 + y.getX()*0.49 );
+			double newy = (x.getY()*0.51 + y.getY()*0.49 );
+			Node new_node = new Node(newx,newy, Street_type.major,end_of_road);
 			Street s1 = new Street(new_node, oldstreet.node1, Street_type.major);
 			Street s2 = new Street(new_node, oldstreet.node2, Street_type.major);
 
@@ -709,13 +572,16 @@ public class Street_Network implements Serializable{
 			oldstreet.node2.streets.remove(oldstreet);
 			oldstreet.node1.streets.add(s1);
 			oldstreet.node2.streets.add(s2);
+			
 			new_node.streets.add(s1);
 			new_node.streets.add(s2);
 			new_node.crossroad = Crossroad.find(all_crossroads, new_node);
 			new_node.angle = new_node.compute_angle();
+			
 			to_grow_nodes.add(new_node);
 			nodes.add(new_node);
-				
+			
+			return new_node;
 			}
 	
 	/**
@@ -725,7 +591,7 @@ public class Street_Network implements Serializable{
 	 * @param block Blok ze kterého hledáme
 	 * @return Seznam nejbliších blokù
 	 */
-	public ArrayList<Block> get_nearest_blocks(int n,Block block){
+	ArrayList<Block> get_nearest_blocks(int n,Block block){
 		ArrayList<Block> rt = new ArrayList<>();
 		rt.add(block);
 		ArrayList<Node> nodes = block.get_nodes();
@@ -742,9 +608,9 @@ public class Street_Network implements Serializable{
 					rt.add(b);
 			}
 			for(Street s: node.streets){
-				if(!visited.contains(s.other_node(node))){
-					queue.add(s.other_node(node));
-					visited.add(s.other_node(node));
+				if(!visited.contains(s.get_other_node(node))){
+					queue.add(s.get_other_node(node));
+					visited.add(s.get_other_node(node));
 				}
 			}
 		}
@@ -756,95 +622,24 @@ public class Street_Network implements Serializable{
 	/**
 	 * Vrátí všechny bloky nacházející se v polomìru r. Bereme benou euklidovskou vzdálenost a mìøíme od støedu blokù.
 	 *
-	 * @param r Polomìr
+	 * @param radius Polomìr
 	 * @param block Blok od kterého mìøíme
 	 * @return Seznam blokù v polomìru r
 	 */
-	public ArrayList<Block> get_blocks_in_radius(double r, Block block){
-		int n = (int)(4 * (r/settings.minor_min_length)*(r/settings.minor_min_length));
+	ArrayList<Block> get_blocks_in_radius(double radius, Block block){
+		int n = (int)(4 * (radius/settings.minor_min_length)*(radius/settings.minor_min_length));
 		ArrayList<Block> candidates = get_nearest_blocks(n, block);
 		Iterator<Block> i = candidates.iterator();
 		while(i.hasNext()){
 			Block b = i.next();
-			if(Point.dist(b.center, block.center)>r)
+			if(Point.dist(b.center, block.center)>radius)
 				i.remove();
 		}
 		return candidates;
 		
 	}
 	
-	/**
-	 * Najde ulici která svírá nejmenší úhel s danou ulicí v daném uzlu. Mìøí se ve smìru hodinovıch ruèièek, podle parametru clockwise.
-	 * Pokud je parametr quarter nulovı, poèítáme jenom s hlavními ulicemi.
-	 *
-	 * @param n Uzel 
-	 * @param street Ulice
-	 * @param clockwise Zda hledám po nebo proti smìru hodinovıch ruèièek
-	 * @param quarter Ètvr ve které hledáme
-	 * @return Ulice s nejmenším úhlem
-	 */
-	private static Street get_least_angled(Node n,Street street, Boolean clockwise, City_part quarter, boolean simple){
-		 n.sort();
-		 int index = n.streets.indexOf(street);
-		 int count = n.streets.size();
-		 
-		 if(simple){
-			 int summand = 1;
-			 if(!clockwise)
-				 summand = -1;
-			 int counter = summand;
-			 Street s = n.streets.get((index+count+counter) % count);
-			 return s;
-		 }
-		 
-		 if(quarter != null){
-			 int summand = 1;
-			 if(!clockwise)
-				 summand = -1;
-			 int counter = summand;
-			 Street s = n.streets.get((index+count + counter) % count);
-			 while(quarter.check_if_inside(s.node1) == Street_Result.fail || quarter.check_if_inside(s.node2) == Street_Result.fail){
-				 counter += summand;
-				 s = n.streets.get((index + count + counter) % count);
-			 }
-			 return n.streets.get((index + count + counter) % count);
-		 }
-		 else{
-			 
-			 int summand = 1;
-			 if(!clockwise)
-				 summand = -1;
-			 int counter = summand;
-			 while(!((n.streets.get((index+count + counter) % count)).major == Street_type.major)){
-				 counter += summand;
-			 }
-			 return n.streets.get((index+count + counter) % count);
-		 }
-		 
-		 
-	 }
+
 	
-	/**
-	 * Pøidá centrum mìsta do daného bodu.
-	 *
-	 * @param point the point
-	 */
-	public void add_city_center(Point point){
-		this.citycenters.add(point);
-	}
 
-	private static boolean is_biggest (City_part bigger, City_part smaller){
-		HashSet<Node> nodes = new HashSet<>();
-		if(Math.abs(bigger.area - smaller.area)<0.001)
-			return true;
-			
-		for(Street s: bigger.streets){
-			if(bigger.streets.indexOf(s) == bigger.streets.lastIndexOf(s)){
-				nodes.add(s.node1);
-				nodes.add(s.node2);
-			}
-		}
-		return false;
-
-	}
 } 

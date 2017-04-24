@@ -3,7 +3,6 @@ package krabec.citysimulator;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-// TODO: Auto-generated Javadoc
 /**
  * Reprezentuje cestu nìjakých obyvatel mìsta z jednoho místa na jiné.
  */
@@ -44,9 +43,8 @@ public class Trip implements Serializable{
 	 *
 	 * @param nd the nd
 	 */
-	public void add_traffic(Node_Distance nd){
-		//this.path =  nd.get_path_dijkstra(start, end);
-		this.path = nd.get_Path_Astar(start, end);
+	public void add_traffic(Node_Distance nd, Street_Network network){
+		this.path = nd.get_Path(start, end,network);
 		for (Street street : path) {
 			street.traffic+=volume;
 		}

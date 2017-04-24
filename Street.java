@@ -2,19 +2,13 @@ package krabec.citysimulator;
 
 import java.io.Serializable;
 
-// TODO: Auto-generated Javadoc
 /**
  * This class represents a single Street segment in our city. 
  * It connects two nodes.
  */
 public class Street implements Serializable
-/**
-	
-*/
+
 {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 8640165666271756086L;
 
 	/** První uzel ze kterého ulice vychází. */
@@ -46,7 +40,7 @@ public class Street implements Serializable
 		this.node1 = node1;
 		this.node2 = node2;
 		this.major = major;
-		this.length = get_length();
+		this.length = compute_length();
 	}
 	
 	/**
@@ -61,7 +55,7 @@ public class Street implements Serializable
 		this.node1 = node1;
 		this.node2 = node2;
 		this.major = major;
-		this.length = get_length();
+		this.length = compute_length();
 		this.built = built;
 	}
 	
@@ -73,12 +67,18 @@ public class Street implements Serializable
 	 * @param node První uzel 
 	 * @return Druhý uzel
 	 */
-	public Node other_node(Node node){
+	public Node get_other_node(Node node){
+			
 		if(node1 == node)
 			return node2;
 		if(node2 == node)
 			return node1;
+		System.out.println("Vracim null");
 		return null;
+	}
+	public Node get_center(){
+		return new Node((node1.getPoint().getX() + node2.getPoint().getX())/2,
+				(node1.getPoint().getY() + node2.getPoint().getY())/2, null,null);
 	}
 	
 	/**
@@ -86,7 +86,7 @@ public class Street implements Serializable
 	 *
 	 * @return Délka ulice
 	 */
-	double get_length(){
+	public double compute_length(){
 		return Point.dist(node1.getPoint(), node2.getPoint());
 	}
  	
@@ -178,13 +178,36 @@ public class Street implements Serializable
 		return ( 360 + angle) % 360;
 	}
 
+	public Street get_parallel_street(double distance, boolean minus){
+		Point vector = node1.getPoint().minus(node2.getPoint());
+		Point perpendicular;
+		if(minus)
+			perpendicular = new Point(-1*vector.getY(), vector.getX());
+		else
+			perpendicular = new Point(vector.getY(), -1*vector.getX());
+		
+		perpendicular = new Point(perpendicular.getX()/perpendicular.norm(), perpendicular.getY()/perpendicular.norm());
+		
+		Node new_node1 = new Node(node1.getPoint().getX() + distance*perpendicular.getX(), node1.getPoint().getY() + distance*perpendicular.getY(), null,null);
+		Node new_node2 = new Node(node2.getPoint().getX() + distance*perpendicular.getX(), node2.getPoint().getY() + distance*perpendicular.getY(), null,null);
+		return new Street(new_node1, new_node2, null);
+	}
 	 
-	 /* (non-Javadoc)
- 	 * @see java.lang.Object#toString()
- 	 */
  	@Override
 	public String toString(){
 		return "Street from (" + node1.getPoint()  +" to "  + node2.getPoint();
 		 
 	 }
+
+	public static boolean are_parallel(Street intersecting, Street longest) {
+		Point vector1 = intersecting.node1.getPoint().minus(intersecting.node2.getPoint());
+		Point vector2 = longest.node1.getPoint().minus(longest.node2.getPoint());
+		vector1 = new Point(vector1.getX()/vector1.norm(), vector1.getY()/vector1.norm());
+		vector2 = new Point(vector2.getX()/vector2.norm(), vector2.getY()/vector2.norm());
+		if(Math.abs(vector1.getX()-vector2.getX())<0.01 && Math.abs(vector1.getY()-vector2.getY())<0.01)
+			return true;
+		if(Math.abs(vector1.getX()+vector2.getX())<0.01 && Math.abs(vector1.getY()+vector2.getY())<0.01)
+			return true;
+		return false;
+	}
 }

@@ -3,10 +3,9 @@ package krabec.citysimulator;
 import java.awt.Color;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
+
 
 /**
  * Zkratka za Land Use Type. Reprezentuje využití nìjaké èásti mìsta. 
@@ -35,7 +34,6 @@ public class Lut implements Serializable{
 	/** Poèet obyvatel na jeden uzel */
 	public double residents;
 	
-	double minimal_lot_area = 0.01;
 	
 	/** Udává jaký podíl má být ve mìstì zabrán tímto typem využití. */
 	public double wanted_percentage;
@@ -48,7 +46,6 @@ public class Lut implements Serializable{
 	
 	public Color color;
 	
-	Settings settings;
 	
 	/**
 	 * Konstruktor
@@ -58,12 +55,11 @@ public class Lut implements Serializable{
 	 * @param percentage the percentage
 	 * @param color the color
 	 */
-	public Lut (String name, double residents,double percentage,Color color,Settings settings){
+	public Lut (String name, double residents,double percentage,Color color){
 		this.setName(name);
 		this.residents = residents;
 		this.color = color;
 		this.wanted_percentage = percentage;
-		this.settings = settings;
 	}
 	
 	/**
@@ -76,22 +72,7 @@ public class Lut implements Serializable{
 		if(val.getType() == Valuation_Types.clustering)
 			val.setInfluencing_lut(this);
 	}
-	
-	public void find_min_area(){
-		double min_area = 0;
-		
-		for(Building b: getBuildings()){
-			if(b.getArea() > min_area){	
-				min_area = b.getArea();
-			}
-		}
-			
-		if(min_area==0)
-			min_area = 0.01;
-		min_area =  (Math.sqrt(min_area)+settings.street_offset +settings.street_width/2) * 
-					(Math.sqrt(min_area)+settings.street_offset +settings.street_width/2);
-		this.minimal_lot_area = min_area*2.5;
-	}
+
 	
 	/**
 	 * Ohodnotí blok pomocí seznamu ohodnocení a vrátí jejich vážený souèet.
@@ -101,10 +82,10 @@ public class Lut implements Serializable{
 	 * @param nd Nejkratší vzdálenosti
 	 * @return Hodnota bloku.
 	 */
-	public double evaluate(Block block,Street_Network network, Node_Distance nd){
+	public double evaluate(Block block,Street_Network network, Node_Distance nd,Settings settings){
 		double sum = 0;
 		for(Valuation val: valuations){
-			sum += val.get_value(network, block, nd) * val.getWeight();
+			sum += val.get_value(network, block, nd,settings) * val.getWeight();
 		}
 		block.value = sum;
 		return sum;

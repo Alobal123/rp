@@ -3,7 +3,6 @@ package krabec.citysimulator;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-// TODO: Auto-generated Javadoc
 /**
  * Tøída urèující zpùsob ohodnocení bloku.
  */
@@ -76,8 +75,8 @@ public class Valuation implements Serializable{
 	 * @param nd the nd
 	 * @return Hodnota
 	 */
-	public double get_value(Street_Network network, Block block, Node_Distance nd){
-		return Mapping.map(get_non_mapped_value(network, block, nd), getMin(), getMax(), getMapping());
+	public double get_value(Street_Network network, Block block, Node_Distance nd,Settings settings){
+		return Mapping.map(get_non_mapped_value(network, block, nd, settings), getMin(), getMax(), getMapping());
 	}
 	
 	/**
@@ -88,10 +87,10 @@ public class Valuation implements Serializable{
 	 * @param nd the nd
 	 * @return Hodnota
 	 */
-	private double get_non_mapped_value(Street_Network network, Block block, Node_Distance nd){
+	private double get_non_mapped_value(Street_Network network, Block block, Node_Distance nd,Settings settings){
 		switch (getType()){
 		case clustering:
-			ArrayList<Block> blocks = network.get_nearest_blocks(12, block);
+			ArrayList<Block> blocks = network.get_nearest_blocks(50, block);
 			int same = 0;
 			int different = 0;
 			for(Block b: blocks){
@@ -101,19 +100,18 @@ public class Valuation implements Serializable{
 						different++;
 				
 			}
-			//System.out.println("Same " + same + " Differenr " + different);
 			if(same + different == 0)
 				return 0;
 			return (double)same/(same+different);
 			
 		case influence:
-			double radius = 2;
+			double radius = settings.minor_max_length*3;
 			double sum = 0;
 			double influencing = 0;
 			blocks = network.get_blocks_in_radius(radius, block);
 			for(Block b: blocks){
 				if(b.built){
-					double dist = Point.dist(b.center, block.center)*b.area/radius;
+					double dist = Point.dist(b.center, block.center)/radius;
 					if(b.lut == getInfluencing_lut())
 						influencing += dist;
 					sum+=dist;
@@ -121,7 +119,7 @@ public class Valuation implements Serializable{
 			}
 			if(sum == 0)
 				return 0;
-			//System.out.println(influencing/sum);
+			
 			return influencing/sum;
 			
 		case traffic:

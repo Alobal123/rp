@@ -5,15 +5,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
 /**
  * Tøída Crossroad reprezentuje køižovatku. Je daná seznamem úhlù mezi ulicemi a urèuje, z jaké køižovatky lze pøerùst v jakou.
  */
 public class Crossroad implements Serializable,Comparable<Crossroad> {
 	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 5891528450453833224L;
 	/** Poèet ulic vycházejících z této køižovatky. */
 	private int number_of_roads;
@@ -41,6 +37,14 @@ public class Crossroad implements Serializable,Comparable<Crossroad> {
 			this.angles.add(angles[i]);
 		}
 	}
+	
+	public static Crossroad get_new_end_of_Road(){
+		Crossroad end_of_road = new Crossroad(1, null);
+		end_of_road.angles = new ArrayList<>();
+		end_of_road.angles.add(360.0);
+		return end_of_road;
+	}
+	
 	/**
 	 * Najde všechny køižovatky, které mohou vzniknout z této køižovatky pøidáním jedné ulice.
 	 * Dosadí výsledek do pøíslušného atributy.
@@ -164,7 +168,7 @@ public class Crossroad implements Serializable,Comparable<Crossroad> {
 	 * @return Køižovatka odpovídající uzlu.
 	 */
 	public static Crossroad find(List<Crossroad> all_crossroads, Node node){
-		node.sort();
+		node.sort_streets_in_this_node();
 		ArrayList<Double> angles = new ArrayList<>();
 		Crossroad newcrossroad = new Crossroad(node.streets.size(), angles);
 		for (int i = 0; i < node.streets.size()-1; i++) {
@@ -181,6 +185,11 @@ public class Crossroad implements Serializable,Comparable<Crossroad> {
 	public int getNumber_of_roads() {
 		return number_of_roads;
 	}
+	/**
+	 * Metoda slouží k parsování køižovate
+	 * @param line
+	 * @return
+	 */
 	public static Crossroad Read_crossroad(String line){
 		Crossroad crossroad =  new Crossroad();
 		String[] split = line.split(",");

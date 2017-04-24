@@ -1,16 +1,16 @@
 package krabec.citysimulator;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 
 /**
  * Tøída reprezentující uzel v grafu ulic, typicky tedy køižovatku.
  */
 public class Node implements Serializable, Comparable<Object>{
-	
 	
 	/**
 	 * 
@@ -74,10 +74,10 @@ public class Node implements Serializable, Comparable<Object>{
 	 * @param y the y
 	 * @param major the major
 	 */
-	public Node(double x,double y, Street_type major){
-		this.setPoint(new Point(x,y));
+	public Node(double x,double y, Street_type major,Crossroad crossroad){
+		this.point = (new Point(x,y));
 		this.major = major;
-		this.crossroad = Street_Network.end_of_road;
+		this.crossroad = crossroad;
  	}
 	
 	/**
@@ -88,11 +88,11 @@ public class Node implements Serializable, Comparable<Object>{
 	 * @param major the major
 	 * @param built the built
 	 */
-	public Node(double x,double y, Street_type major,boolean built){
-		this.setPoint(new Point(x,y));
+	public Node(double x,double y, Street_type major,boolean built,Crossroad crossroad){
+		this.point = (new Point(x,y));
 		this.major = major;
-		this.crossroad = Street_Network.end_of_road;
 		this.setBuilt(built);
+		this.crossroad = crossroad;
  	}
 	
 	/**
@@ -100,7 +100,7 @@ public class Node implements Serializable, Comparable<Object>{
 	 *
 	 * @param nd the nd
 	 */
-	public void remove_trips(Node_Distance nd){
+	void remove_trips(Node_Distance nd){
 		for(Trip t: trips){
 			t.remove_traffic(nd);
 		}
@@ -113,7 +113,7 @@ public class Node implements Serializable, Comparable<Object>{
 	 *
 	 * @return Úhel uzlu
 	 */
-	public double compute_angle(){
+	double compute_angle(){
 		if(streets.size() != crossroad.getNumber_of_roads()){
 			return 0;
 			
@@ -122,7 +122,7 @@ public class Node implements Serializable, Comparable<Object>{
 			return (streets.get(0).get_absolute_angle(this)) % 360;
 		}
 		else{
-			this.sort();
+			this.sort_streets_in_this_node();
 			for (int i = 0; i < this.crossroad.getNumber_of_roads(); i++) {
 				int same_angles = 0;
 				for (int j = 0; j < this.crossroad.getNumber_of_roads(); j++) {
@@ -132,7 +132,6 @@ public class Node implements Serializable, Comparable<Object>{
 					if((Math.abs(angle_between_streets - crossroad.angles.get(j)) < 0.00001)){
 						same_angles++;
 					}	
-					
 				}
 				if(same_angles == crossroad.getNumber_of_roads()){
 					return (streets.get(i).get_absolute_angle(this));
@@ -146,7 +145,7 @@ public class Node implements Serializable, Comparable<Object>{
 	/**
 	 * Setøídí ulice tohoto uzlu.
 	 */
-	public void sort(){
+	void sort_streets_in_this_node(){
 		NodeComparator nc = new NodeComparator(this);
 		Collections.sort(streets,nc);
 	}
@@ -157,7 +156,7 @@ public class Node implements Serializable, Comparable<Object>{
 	 * @param street Ulice
 	 * @return Vzdálenost od ulice.
 	 */
-	public double distance(Street street){	
+	double compute_distance_from_street(Street street){	
 		Point v = street.node1.getPoint();
 		Point w = street.node2.getPoint();
 		Point p = this.getPoint();
@@ -166,8 +165,8 @@ public class Node implements Serializable, Comparable<Object>{
 		double t = Math.max(0, Math.min(1, Point.dot(p.minus(v),w.minus(v))/length_squared));
 		Point projection = v.plus(new Point(w.minus(v).getX()*t,w.minus(v).getY()*t));
 		return Point.dist(projection, p);
-		
 	}
+	
 	
 	@Override
 	public String toString(){
@@ -175,14 +174,14 @@ public class Node implements Serializable, Comparable<Object>{
 	}
 	
 	/**
-	 * Odstraní ulici do uzlu.
+	 * Odstraní ulici do vedoucí z tohoto uzlu do uzlu v parametru.
 	 *
 	 * @param node Uzel
 	 */
-	public void remove_street_to_node(Node node){
+	void remove_street_to_node(Node node){
 		Street to_remove = null;
 		for (Street s: streets) {
-			if(s.node1 ==node|| s.node2 ==node)
+			if(s.node1 ==node || s.node2 ==node)
 				to_remove = s;
 		}
 		streets.remove(to_remove);
@@ -196,37 +195,51 @@ public class Node implements Serializable, Comparable<Object>{
 	 * @param length Vzdálenost novì vytvoøeného uzlu od starého
 	 * @return Novì vytvoøený uzel
 	 */
-	public static Node make_new_node(double angle, Street_type major, Node oldnode, double length){
+	static Node make_new_node(double angle, Street_type major, Node oldnode, double length,Crossroad crossroad){
 		double dx = Math.sin(angle * Math.PI / 180) * length;
 		double dy = Math.cos(angle * Math.PI / 180) * length;
-		return new Node(oldnode.getPoint().getX() + dx, oldnode.getPoint().getY() + dy, major);
+		return new Node(oldnode.getPoint().getX() + dx, oldnode.getPoint().getY() + dy, major,crossroad);
 	}
-	public Node copy_node (Block block){
-		Node newnode = new Node(this.getPoint().getX(), this.getPoint().getY(), this.major);
+	
+	
+	/**
+	 * Zkopíruje uzel ale jen s tìmi ulicemi, které náleží do bloku.
+	 * @param block
+	 * @return
+	 */
+	Node copy_node_with_streets_from_block (Block block){
+		Node newnode = new Node(this.getPoint().getX(), this.getPoint().getY(), this.major,this.crossroad);
 		newnode.setBuilt(this.isBuilt());
 		for(Street s: this.streets){
-			HashSet<Node> nodes = block.get_nodes_once();
-			if(nodes.contains(s.node1) && nodes.contains(s.node2)){
+			if(block.check_if_inside(s.node1) == Street_result.not_altered &&
+					block.check_if_inside(s.node2) == Street_result.not_altered &&
+					block.check_if_inside(s.get_center()) == Street_result.not_altered){
 				newnode.streets.add(s);
 			}	
 		}
 		return newnode;
 	}
 	
-	@Override
+
+	
+	/*@Override
 	public boolean equals(Object o){
 		Node n;
 		if(o instanceof Node)
 			n = (Node) o;
 		else
 			return false;
-		if(Point.dist(this.getPoint(), n.getPoint())<0.00001){
+		if(Point.dist(this.getPoint(), n.getPoint())<0.0001){
+			if(o != this){
+				System.out.println(Point.dist(this.getPoint(), n.getPoint()));
+				throw new IndexOutOfBoundsException();
+			}
 			return true;
 		}
 		return false;
-	}
+	}*/
 
-	@Override
+	@Override	
 	public int compareTo(Object o) {
 		Node n = (Node) o;
 		if(getPoint().getX()>n.getPoint().getX())

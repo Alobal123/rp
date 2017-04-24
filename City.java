@@ -2,11 +2,8 @@ package krabec.citysimulator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Random;
-
-
 
 /**
  * Tato tøída reprezentuje celé mìsto a øídí celou simulaci.
@@ -26,12 +23,8 @@ public class City implements Serializable{
 	
 	/** Instance tøídy nd se stará o hledání a uchovávání nejkratších cest. */
 	Node_Distance nd;
-	
-	/** Celková hodnota mìsta. */
-	double value = 0;
-	
-	Random rnd = new Random();
-	private Settings settings;
+
+	public Random_Wrapped rnd = new Random_Wrapped(2837);//2837
 	
 	/**
 	 * Konstruktor
@@ -40,8 +33,8 @@ public class City implements Serializable{
 	 */
 	public City (Street_Network network){
 		this.network = network;
+		this.network.rnd = rnd;
 		this.nd = new Node_Distance(network);
-		this.setSettings(network.settings);
 	}
 	
 	
@@ -50,64 +43,75 @@ public class City implements Serializable{
 	 * Novým blokù urèí jejich nejvýhodnìjší Lut a poté ještì se pokusí vylepšit hodnotu celého mìsta 
 	 */
 	public void step(){
-		List<Node> changed_nodes = network.grow_major_streets(5);
-		HashSet<Node> nodes_to_check = new HashSet<>();
+		//Rùst ulic
+		List<Node> changed_nodes = network.grow_major_streets(10);
+		//Poèítání dopravy
+		LinkedHashSet<Node> nodes_to_check = new LinkedHashSet<Node>();
 		for (Node node : changed_nodes) {
 			nodes_to_check.add(node);
 			for(Street s: node.streets){
-				nodes_to_check.add(s.other_node(node));
+				nodes_to_check.add(s.get_other_node(node));
 			}
 		}
-		int additional_nodes = (int)(network.nodes.size()*getSettings().traffic_resample_rate);
+		int additional_nodes = (int)(network.nodes.size()*network.settings.traffic_resample_rate);
 		for (int i = 0; i < additional_nodes; i++) {
-			int index = rnd.nextInt(additional_nodes);
+			int index = rnd.nextInt(additional_nodes,"choose_additional_nodes_to_change_traffic");
 			nodes_to_check.add(network.nodes.get(index));
 		}
 		for(Node node: nodes_to_check){
 			node.remove_trips(nd);
 		}
 		nd = new Node_Distance(network);
+		
 		for(Node node: nodes_to_check){
 			int residents = (int) node.residents;
 			for (int i = 0; i < residents; i++) {
 				Trip trip = generate_trip(node);
 				node.trips.add(trip);
-				trip.add_traffic(nd);
+				trip.add_traffic(nd,network);
 			}
 		}
-		build();
-		for(Block b: choose_blocks()){
-			reevaluate(b,null);
+		//Stavìní mìsta
+		build_planned_city();
+		//Pøepoèítání lutu pro náhodnì vybrané bloky
+		for(Block b: choose_random_blocks()){
+			change_lut_in_block(b,null);
+			if(count_buildings(b) == 0){
+				fill_with_most_buildings(b);
+			}
 		}
 	}
 		
 		/**
 		 * Vytvoøí nový trip, tj. pro daný zaèátek vybere konec.
 		 *
-		 * @param node Uzel, ve kterém trip zaèíná.
+		 * @param start_node Uzel, ve kterém trip zaèíná.
 		 * @return Nový trip.
 		 */
-		private Trip generate_trip(Node node){
-			return new Trip(node,choose_end_of_trip(node),1);
+		private Trip generate_trip(Node start_node){
+			return new Trip(start_node,choose_end_of_trip(start_node),1);
 		}
 		
 		/**
 		 * Vybere cíl tripu, na základì poètu obyvatel a vzdálenosti od zaèátku.
 		 *
-		 * @param node Uzel, ve kterém trip zaèíná.
+		 * @param start_node Uzel, ve kterém trip zaèíná.
 		 * @return Cílový uzel tripu.
 		 */
-		private Node choose_end_of_trip(Node node){
-			double [] distribution = new double [network.nodes.size()];
+		private Node choose_end_of_trip(Node start_node){
+			return network.nodes.get(rnd.nextInt(network.nodes.size(),"choose_end_of_trip"));
+		/*	double [] distribution = new double [network.nodes.size()];
 			double distSum = 0;
 			for (int i = 0; i < network.nodes.size(); i++) {
 				Node possible_end = network.nodes.get(i);
-				if(possible_end != node)
-					distribution[i] = possible_end.residents * Math.pow(Math.E,-1*Point.dist(node.getPoint(), possible_end.getPoint()));
+				if(possible_end != start_node)
+					distribution[i] = possible_end.residents * Math.pow(Math.E,-1*Point.dist(start_node.getPoint(), possible_end.getPoint()));
 				distSum +=distribution[i];
 			}
-			double rand = Math.random();
-			double ratio = 1.0f / distSum;
+			System.out.println("distsum = " + distSum);
+			double rand = rnd.nextDouble("choose_end_of_trip");
+			//double rand = Math.random();
+			double ratio = 1.0 / distSum;
 			double tempDist = 0;
 			for (int i = 0; i < distribution.length; i++) {
 				tempDist += distribution[i];
@@ -115,7 +119,7 @@ public class City implements Serializable{
 					return network.nodes.get(i);
 			
 			}
-			return null;
+			return null;*/
 		}
 		
 		/**
@@ -123,10 +127,11 @@ public class City implements Serializable{
 		 *
 		 *
 		 */
-		private void build(){
+		private void build_planned_city(){
 			for(Node node: network.nodes){
 				for (Street s: node.streets){
-					if(!s.built && s.traffic >= getSettings().build_cost){
+					if(!s.built && s.traffic >= network.settings.build_cost){
+						
 						s.built = true;
 						s.node1.setBuilt(true);
 						s.node2.setBuilt(true);
@@ -140,10 +145,40 @@ public class City implements Serializable{
 						if(block.check_if_built()){
 							block.built = true;
 							block.build_all();
-							block.choose_lut(luts, network, nd);
+							change_lut_in_block(block, block.find_best_lut(luts, network, nd, network.settings));
+							if(count_buildings(block) == 0){
+								fill_with_most_buildings(block);
+							}
+								
+							
 						}
 				}
 			}
+		}
+		
+		private void fill_with_most_buildings(Block block){
+			int max = -1;
+			Lut best_lut = null;
+			for(Lut lut : luts){
+				change_lut_in_block(block, lut);
+				int buildings_count = count_buildings(block);
+				if(buildings_count > max){
+					max = buildings_count;
+					best_lut = lut;
+				}
+			}
+			change_lut_in_block(block, best_lut);
+		}
+		
+		private int count_buildings(Block block){
+			int sum = 0;
+			for(City_part cp: block.contained_city_parts){
+				Lot lot = (Lot) cp;
+				if(lot.building != null)
+					sum++;
+			}
+			return sum;
+				
 		}
 		
 		/**
@@ -151,16 +186,16 @@ public class City implements Serializable{
 		 *
 		 * @return Množina blokù.
 		 */
-		private HashSet<Block> choose_blocks(){
+		private LinkedHashSet<Block> choose_random_blocks(){
 			ArrayList<Block> allblocks = new ArrayList<>();
-			HashSet<Block> chosen = new HashSet<>();
+			LinkedHashSet<Block> chosen = new LinkedHashSet<>();
 			for (Quarter q: network.quarters) {
 				for(City_part cp : q.contained_city_parts){
 					allblocks.add((Block)cp);
 				}
 			}
-			for (int i = 0; i < (int) (getSettings().lut_resample_rate * allblocks.size()); i++) {
-				chosen.add(allblocks.get(rnd.nextInt(allblocks.size())));
+			for (int i = 0; i < (int) (network.settings.lut_resample_rate * allblocks.size()); i++) {
+				chosen.add(allblocks.get(rnd.nextInt(allblocks.size(),"choose_blocks_to_change_lut")));
 			}
 			return chosen;
 			
@@ -173,7 +208,7 @@ public class City implements Serializable{
 		 * @return Hodnota mìsta.
 		 */
 		private double evaluate(){
-			return (1-getSettings().global_weight)*local_value() + getSettings().global_weight*global_value();
+			return (1-network.settings.global_weight)*get_local_value() + network.settings.global_weight*get_global_value();
 		}
 		
 		/**
@@ -181,10 +216,10 @@ public class City implements Serializable{
 		 *
 		 * @return Globální hodnota.
 		 */
-		private double global_value(){
+		private double get_global_value(){
 			double sum = 0;
 			for(Lut lut : luts){
-				sum -= ((percent(lut) - lut.wanted_percentage)/0.05) * ((percent(lut) - lut.wanted_percentage)/0.05);
+				sum -= ((get_ratio_of_lut(lut) - lut.wanted_percentage)/0.05) * ((get_ratio_of_lut(lut) - lut.wanted_percentage)/0.05);
 				
 			}
 			return sum;
@@ -196,7 +231,7 @@ public class City implements Serializable{
 		 * @param lut 
 		 * @return Podíl
 		 */
-		private double percent(Lut lut){
+		private double get_ratio_of_lut(Lut lut){
 			double value_sum = 0;
 			double area_sum = 0;
 			for (Quarter q : network.quarters) {
@@ -219,7 +254,7 @@ public class City implements Serializable{
 		 *
 		 * @return Lokální hodnota
 		 */
-		private double local_value(){
+		private double get_local_value(){
 			double value_sum = 0;
 			double area_sum = 0;
 			for (Quarter q : network.quarters) {
@@ -236,13 +271,13 @@ public class City implements Serializable{
 			return value_sum/area_sum;
 		}
 		
-		public void reevaluate(Block b, Lut bestlut){
+		public void change_lut_in_block(Block b, Lut bestlut){
 			double max =-1000;
 			Lut prevlut = b.lut;
 			if(bestlut == null){
 				for(Lut lut: luts){
 					b.lut = lut;
-					b.value = lut.evaluate(b, network, nd)-getSettings().lut_resample_cost;
+					b.value = lut.evaluate(b, network, nd,network.settings)- network.settings.lut_resample_cost;
 					double value = evaluate();
 					if(value > max){
 						max = value;
@@ -251,44 +286,32 @@ public class City implements Serializable{
 				}
 			}
 			if(bestlut != prevlut){
-				for (Node node : b.get_nodes_once()) {
-					node.residents -= b.lut.residents;
-				}
-				
-				b.lut = bestlut;
+
 				
 				b.lot_borders = new ArrayList<>();
 				for(Node n: b.get_nodes_once()){
-					b.lot_borders.add(n.copy_node(b));
+					b.lot_borders.add(n.copy_node_with_streets_from_block(b));
 				}
 				
 				ArrayList<Node> new_lot_borders = new ArrayList<>();
+				
 				for(Node n: b.lot_borders){
-					Node newnode = new Node(n.getPoint().getX(), n.getPoint().getY(), n.major,true);
+					Node newnode = new Node(n.getPoint().getX(), n.getPoint().getY(), n.major,true,null);
 					new_lot_borders.add(newnode);
 				}
 				
-				HashSet<Street> already_added = new HashSet<>();
-				for(Node n: b.lot_borders){
-					for(Street s: n.streets){
+				ArrayList<Street> already_added = new ArrayList<>();
+				for(Street s: b.streets){
 						if(!already_added.contains(s)){
 							b.substitute_streets(s,new_lot_borders);
 							already_added.add(s);
 						}
 					}
-				}
+				
 				b.remove_useless_nodes(new_lot_borders);
 				b.lot_borders = new_lot_borders;
 				b.contained_city_parts = new ArrayList<>();
-				b.divide_to_convex();
-
-				for(City_part current_part: b.contained_city_parts){
-					((Lot)current_part).choose_and_place (b.lut,getSettings());
-				}
-				for (Node node : b.get_nodes_once()) {
-					node.residents += b.lut.residents;
-				}
-				b.value = max;
+				b.choose_lut(luts, bestlut, network, nd,network.settings);
 
 			}
 			else{
@@ -297,15 +320,5 @@ public class City implements Serializable{
 			
 		}
 
-
-		public Settings getSettings() {
-			return settings;
-		}
-
-
-		public void setSettings(Settings settings) {
-			this.settings = settings;
-			this.network.settings = settings;
-		}
 		
 	}
